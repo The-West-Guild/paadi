@@ -4202,6 +4202,9 @@
                           "maximum": 100,
                           "type": "number"
                         },
+                        "phone": {
+                          "type": "string"
+                        },
                         "weight": {
                           "exclusiveMinimum": 0,
                           "type": "number"
