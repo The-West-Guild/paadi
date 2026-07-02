@@ -1,0 +1,9 @@
+{
+  "extends": "./packages/typescript-config/base.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true
+  },
+  "files": [],
+  "include": []
+}

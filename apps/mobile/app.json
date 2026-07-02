@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Paadi",
+    "slug": "paadi",
+    "scheme": "paadi",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "plugins": ["expo-router"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {}
+  }
+}

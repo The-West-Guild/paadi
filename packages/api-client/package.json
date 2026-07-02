@@ -1,0 +1,27 @@
+{
+  "name": "@paadi/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@paadi/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@paadi/eslint-config": "workspace:*",
+    "@paadi/typescript-config": "workspace:*",
+    "eslint": "^9.17.0",
+    "typescript": "catalog:"
+  }
+}

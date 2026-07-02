@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+
+
+@theme {
+  /* Palette A — Soft & rounded (default starting point; swap once team decides) */
+  --color-bg: #f9fafb;
+  --color-surface: #ffffff;
+  --color-primary: #ffd200;
+  --color-secondary: #f472b6;
+  --color-success: #10b981;
+  --color-warning: #fef3c7;
+  --color-danger: #b91c1c;
+  --color-ink: #111827;
+
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+    /* Bounce Animation */
+    --animate-low-bounce: low-bounce 1s infinite;
+
+    /* 2. KeyFrame adjustment*/
+    @keyframes low-bounce {
+      0%, 100% {
+        transform: translateY(0);
+        animation-timing-function: cubic-bezier(0.1, 0, 1, 1);
+      }
+      50% {
+        /* Controls height. Changed default -25% to a short -8% (or use pixels like -6px) */
+        transform: translateY(-10%); 
+        animation-timing-function: cubic-bezier(0, 0, 0.1, 1);
+      }
+    }
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+}

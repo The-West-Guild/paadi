@@ -1,0 +1,34 @@
+{
+  "name": "@paadi/web",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
+    "@paadi/api-client": "workspace:*",
+    "@paadi/contracts": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.1",
+    "@tanstack/react-query": "^5.101.1",
+    "autoprefixer": "^10.5.1",
+    "lucide-react": "^1.21.0",
+    "next": "^15.1.0",
+    "postcss": "^8.5.15",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-hook-form": "^7.80.0",
+    "tailwindcss": "^4.3.1",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@paadi/eslint-config": "workspace:*",
+    "@paadi/typescript-config": "workspace:*",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "catalog:"
+  }
+}

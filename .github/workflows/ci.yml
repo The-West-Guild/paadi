@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: lint · types · test · build (api graph)
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://paadi:paadi@localhost:5433/paadi
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      NOMBA_DRIVER: mock
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: paadi
+          POSTGRES_PASSWORD: paadi
+          POSTGRES_DB: paadi
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U paadi"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Sync schema to test database
+        run: pnpm db:push
+
+      - name: Lint, type-check, test, build
+        run: pnpm exec turbo run lint check-types test build --filter=@paadi/api...
+
+      - name: Export OpenAPI spec
+        run: pnpm --filter @paadi/api run export-openapi
+
+      - name: Assert OpenAPI spec is committed and up to date
+        run: git diff --exit-code docs/api/openapi.json

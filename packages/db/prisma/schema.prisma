@@ -1,0 +1,678 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Tier {
+  TIER_0
+  TIER_1
+  TIER_2
+}
+
+enum PotStatus {
+  DRAFT
+  OPEN
+  FUNDED
+  SETTLING
+  SETTLED
+  EXPIRED
+  CANCELLED
+  REFUNDING
+  REFUNDED
+}
+
+enum ShareStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERPAID
+  EXPIRED
+  REFUNDED
+}
+
+enum SettlementType {
+  BILL_PAYMENT
+  BANK_PAYOUT
+  WALLET
+}
+
+enum CompletionRule {
+  PROGRESSIVE
+  ALL_OR_NOTHING
+}
+
+enum AttributionMode {
+  CHECKOUT_LINK
+  VIRTUAL_ACCOUNT
+}
+
+enum BillerCategory {
+  ELECTRICITY
+  CABLE
+}
+
+enum MeterType {
+  PREPAID
+  POSTPAID
+}
+
+enum PaymentMethod {
+  CARD
+  TRANSFER
+  USSD
+  WALLET
+}
+
+enum LedgerDirection {
+  DR
+  CR
+}
+
+enum ExceptionReason {
+  UNKNOWN_ACCOUNT
+  CLOSED_ACCOUNT
+  NAME_MISMATCH
+  AMOUNT_MISMATCH
+  DUPLICATE
+}
+
+enum ExceptionStatus {
+  OPEN
+  RESOLVED
+  REFUNDED
+}
+
+enum SettlementStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AuthProvider {
+  GOOGLE
+}
+
+enum KycStatus {
+  NONE
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum VirtualAccountStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+}
+
+enum VirtualAccountKind {
+  STATIC
+}
+
+enum WebhookEndpointStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+  DEAD
+}
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+  WEB
+}
+
+enum NotificationChannel {
+  PUSH
+  SMS
+  WHATSAPP
+}
+
+enum NotificationEvent {
+  NEW_CONTRIBUTION
+  POT_SETTLED
+  PAYOUT_ALERT
+  NEW_LOGIN
+  ORGANIZER_REMINDER
+  FRIEND_REQUEST
+}
+
+enum NudgeKind {
+  CREATED_DELAY
+  DEADLINE_APPROACHING
+}
+
+model User {
+  id                String        @id @default(uuid())
+  phoneBlindIndex   String        @unique
+  phoneEncrypted    String
+  phoneVerifiedAt   DateTime?
+  email             String?       @unique
+  emailVerifiedAt   DateTime?
+  passwordHash      String?
+  pinHash           String?
+  tier              Tier          @default(TIER_0)
+  kycStatus         KycStatus     @default(NONE)
+  bvnVerified       Boolean       @default(false)
+  bvnVerifiedAt     DateTime?
+  kycReference      String?
+  status            AccountStatus @default(ACTIVE)
+  walletBalanceKobo BigInt        @default(0)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  profile           Profile?
+  identities        AuthIdentity[]
+  sessions          Session[]
+  devices           UserDevice[]
+  payoutAccounts    PayoutAccount[]
+  notificationPrefs NotificationPreference[]
+  pots              Pot[]
+  virtualAccount    VirtualAccount?
+  walletCredits     WalletCredit[]
+  withdrawals       Withdrawal[]
+  webhookEndpoints  WebhookEndpoint[]
+
+  @@index([email])
+}
+
+model Profile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username           String   @unique
+  usernameNormalized String   @unique
+  firstName          String?
+  lastName           String?
+  displayName        String?
+  avatarUrl          String?
+  locale             String?  @default("en-NG")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([usernameNormalized])
+}
+
+model VirtualAccount {
+  id              String               @id @default(uuid())
+  userId          String               @unique
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accountNumber   String               @unique
+  accountName     String
+  providerBank    String
+  nombaAccountRef String               @unique
+  status          VirtualAccountStatus @default(ACTIVE)
+  kind            VirtualAccountKind   @default(STATIC)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  closedAt        DateTime?
+
+  walletCredits WalletCredit[]
+
+  @@index([userId])
+}
+
+model AuthIdentity {
+  id                String       @id @default(uuid())
+  userId            String
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          AuthProvider
+  providerAccountId String
+  email             String?
+  emailVerified     Boolean      @default(false)
+  lastSignInAt      DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId         String
+  refreshTokenHash String    @unique
+  parentId         String?
+  deviceInfo       Json?
+  ip               String?
+  userAgent        String?
+  expiresAt        DateTime
+  lastUsedAt       DateTime?
+  rotatedAt        DateTime?
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+}
+
+model UserDevice {
+  id               String         @id @default(uuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId         String
+  platform         DevicePlatform
+  pushToken        String?
+  biometricEnabled Boolean        @default(false)
+  lastSeenAt       DateTime?
+  createdAt        DateTime       @default(now())
+
+  @@unique([userId, deviceId])
+  @@index([userId])
+}
+
+model PayoutAccount {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankCode           String
+  bankName           String
+  accountNumberEnc   String
+  accountNumberLast4 String
+  accountName        String
+  nameMatchVerified  Boolean  @default(false)
+  isPrimary          Boolean  @default(false)
+  nombaRecipientRef  String?
+  createdAt          DateTime @default(now())
+
+  pots        Pot[]
+  withdrawals Withdrawal[]
+
+  @@index([userId])
+}
+
+model NotificationPreference {
+  id      String              @id @default(uuid())
+  userId  String
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   NotificationEvent
+  channel NotificationChannel
+  enabled Boolean             @default(true)
+
+  @@unique([userId, event, channel])
+  @@index([userId])
+}
+
+model Pot {
+  id                String          @id @default(uuid())
+  creatorId         String
+  creator           User            @relation(fields: [creatorId], references: [id])
+  title             String
+  description       String?
+  totalKobo         BigInt
+  collectedKobo     BigInt          @default(0)
+  targetKobo        BigInt
+  settlementType    SettlementType
+  completionRule    CompletionRule
+  attributionMode   AttributionMode @default(CHECKOUT_LINK)
+  status            PotStatus       @default(DRAFT)
+  billerCategory    BillerCategory?
+  billerProductCode String?
+  billerCustomerId  String?
+  meterType         MeterType?
+  billerMeta        Json?
+  payoutAccountId   String?
+  payoutAccount     PayoutAccount?  @relation(fields: [payoutAccountId], references: [id])
+  deadlineAt        DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  splits            Split[]
+  potNudges         PotNudge[]
+  payments          Payment[]
+  settlements       Settlement[]
+  refunds           Refund[]
+
+  @@index([creatorId])
+  @@index([payoutAccountId])
+}
+
+model Split {
+  id               String      @id @default(uuid())
+  potId            String
+  pot              Pot         @relation(fields: [potId], references: [id])
+  label            String
+  weight           Float
+  shareKobo        BigInt
+  paidKobo         BigInt      @default(0)
+  status           ShareStatus @default(PENDING)
+  checkoutOrderRef String?     @unique
+  payToken         String      @unique
+  checkoutUrl      String?
+  payerPhoneHash   String?
+  payerPhoneEnc    String?
+  paidAt           DateTime?
+  createdAt        DateTime    @default(now())
+  payments         Payment[]
+  splitNudges      SplitNudge[]
+
+  @@index([potId])
+}
+
+model SplitNudge {
+  id      String    @id @default(uuid())
+  splitId String
+  split   Split     @relation(fields: [splitId], references: [id])
+  kind    NudgeKind
+  sentAt  DateTime  @default(now())
+
+  @@unique([splitId, kind])
+  @@index([splitId])
+}
+
+model PotNudge {
+  id             String    @id @default(uuid())
+  potId          String
+  pot            Pot       @relation(fields: [potId], references: [id])
+  kind           NudgeKind
+  recipientCount Int
+  sentAt         DateTime  @default(now())
+
+  @@unique([potId, kind])
+  @@index([potId])
+}
+
+model Payment {
+  id                 String        @id @default(uuid())
+  potId              String
+  pot                Pot           @relation(fields: [potId], references: [id])
+  splitId            String?
+  split              Split?        @relation(fields: [splitId], references: [id])
+  nombaTransactionId String        @unique
+  amountKobo         BigInt
+  method             PaymentMethod
+  senderName         String?
+  senderAccount      String?
+  senderBank         String?
+  rawEventId         String?
+  status             String
+  createdAt          DateTime      @default(now())
+  refunds            Refund[]
+
+  @@index([potId])
+}
+
+model WalletCredit {
+  id                 String          @id @default(uuid())
+  userId             String
+  user               User            @relation(fields: [userId], references: [id])
+  virtualAccountId   String?
+  virtualAccount     VirtualAccount? @relation(fields: [virtualAccountId], references: [id])
+  nombaTransactionId String          @unique
+  amountKobo         BigInt
+  senderName         String?
+  senderAccount      String?
+  senderBank         String?
+  senderBankCode     String?
+  rawEventId         String?
+  status             String
+  createdAt          DateTime        @default(now())
+
+  @@index([userId])
+}
+
+model Settlement {
+  id             String           @id @default(uuid())
+  potId          String
+  pot            Pot              @relation(fields: [potId], references: [id])
+  type           SettlementType
+  merchantTxRef  String           @unique
+  amountKobo     BigInt
+  feeKobo        BigInt           @default(0)
+  nombaRef       String?
+  status         SettlementStatus @default(PENDING)
+  vendToken      String?
+  vendUnits      String?
+  providerStatus String?
+  failureReason  String?
+  settledAt      DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([potId])
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Refund {
+  id            String       @id @default(uuid())
+  potId         String
+  pot           Pot          @relation(fields: [potId], references: [id])
+  paymentId     String
+  payment       Payment      @relation(fields: [paymentId], references: [id])
+  merchantTxRef String       @unique
+  amountKobo    BigInt
+  nombaRef      String?
+  status        RefundStatus @default(PENDING)
+  failureReason String?
+  createdAt     DateTime     @default(now())
+  refundedAt    DateTime?
+
+  @@index([potId])
+  @@index([paymentId])
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Withdrawal {
+  id              String           @id @default(uuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id])
+  payoutAccountId String
+  payoutAccount   PayoutAccount    @relation(fields: [payoutAccountId], references: [id])
+  merchantTxRef   String           @unique
+  amountKobo      BigInt
+  feeKobo         BigInt           @default(0)
+  nombaRef        String?
+  status          WithdrawalStatus @default(PENDING)
+  providerStatus  String?
+  failureReason   String?
+  createdAt       DateTime         @default(now())
+  completedAt     DateTime?
+
+  @@index([userId])
+}
+
+model LedgerAccount {
+  id        String        @id @default(uuid())
+  kind      String
+  ownerRef  String
+  createdAt DateTime      @default(now())
+  entries   LedgerEntry[]
+
+  @@unique([kind, ownerRef])
+}
+
+model LedgerTransaction {
+  id        String        @id @default(uuid())
+  kind      String
+  potId     String?
+  refType   String?
+  refId     String?
+  memo      String?
+  createdAt DateTime      @default(now())
+  entries   LedgerEntry[]
+
+  @@index([createdAt])
+}
+
+model LedgerEntry {
+  id            String            @id @default(uuid())
+  transactionId String
+  transaction   LedgerTransaction @relation(fields: [transactionId], references: [id])
+  accountId     String
+  account       LedgerAccount     @relation(fields: [accountId], references: [id])
+  direction     LedgerDirection
+  amountKobo    BigInt
+
+  @@index([transactionId])
+  @@index([accountId])
+}
+
+model WebhookEventIn {
+  id              String    @id @default(uuid())
+  provider        String
+  providerEventId String
+  signatureOk     Boolean
+  payload         Json
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@unique([provider, providerEventId])
+}
+
+model ReconciliationException {
+  id                  String          @id @default(uuid())
+  nombaTransactionId  String          @unique
+  amountKobo          BigInt
+  reason              ExceptionReason
+  status              ExceptionStatus @default(OPEN)
+  senderName          String?
+  senderAccount       String?
+  senderBank          String?
+  senderBankCode      String?
+  vaAccountNumber     String?
+  suspenseOwnerRef    String          @default("house")
+  ledgerTxnId         String?
+  matchedUserId       String?
+  resolvedBy          String?
+  resolvedAt          DateTime?
+  note                String?
+  refundMerchantTxRef String?         @unique
+  refundNombaRef      String?
+  refundStatus        String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([status])
+  @@index([reason])
+  @@index([matchedUserId])
+}
+
+model WebhookEventOut {
+  id            String           @id @default(uuid())
+  target        String
+  eventType     String
+  payload       Json
+  status        String           @default("pending")
+  attempts      Int              @default(0)
+  nextAttemptAt DateTime?
+  endpointId    String?
+  endpoint      WebhookEndpoint? @relation(fields: [endpointId], references: [id])
+  createdAt     DateTime         @default(now())
+
+  @@index([status])
+  @@index([endpointId])
+}
+
+model WebhookEndpoint {
+  id          String                @id @default(cuid())
+  userId      String
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url         String
+  secretHash  String
+  secretEnc   String
+  description String?
+  events      String[]
+  status      WebhookEndpointStatus @default(ACTIVE)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  outboxEvents WebhookEventOut[]
+  deliveries   WebhookDelivery[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model WebhookDelivery {
+  id               String                @id @default(uuid())
+  endpointId       String
+  endpoint         WebhookEndpoint       @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  eventId          String
+  eventType        String
+  payload          Json?
+  status           WebhookDeliveryStatus @default(PENDING)
+  attempts         Int                   @default(0)
+  nextAttemptAt    DateTime?
+  lastResponseCode Int?
+  lastError        String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@index([endpointId])
+  @@index([status])
+  @@index([nextAttemptAt])
+  @@index([status, nextAttemptAt])
+}
+
+model IdempotencyKey {
+  key         String   @id
+  scope       String
+  requestHash String
+  response    Json?
+  createdAt   DateTime @default(now())
+}
+
+model AuditEvent {
+  sequence     BigInt   @id @default(autoincrement())
+  eventType    String
+  actorId      String?
+  targetId     String?
+  payloadHash  String
+  previousHash String?
+  createdAt    DateTime @default(now())
+}
+
+model Transaction {
+  id             String    @id @default(uuid())
+  userId         String
+  type           String
+  amountKobo     BigInt
+  nombaRef       String?
+  status         String
+  idempotencyKey String?
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  @@index([userId])
+}
+
+model RateAlert {
+  id           String   @id @default(uuid())
+  userId       String
+  currencyPair String
+  targetRate   Float
+  direction    String
+  mode         String
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}

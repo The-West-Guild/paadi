@@ -1,0 +1,13 @@
+.git
+docs
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/.expo
+**/.turbo
+**/generated/prisma
+**/*.tsbuildinfo
+*.log
+.env
+**/.env
