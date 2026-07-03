@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMe } from "@/features/settings/profile-hooks";
-import { ChevronRight, User, Lock, Wallet, Bell, LogOut } from "lucide-react";
+import { useMe, useLogout } from "@/features/settings/profile-hooks";
+import { ChevronRight, User, Lock, Wallet, Bell, LogOut, Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { data, isPending, error } = useMe();
+  const logoutMutation = useLogout();
 
   const menuItems = [
     { label: "Profile", icon: User, href: "/settings/profile" },
@@ -16,9 +17,16 @@ export default function SettingsPage() {
   ];
 
   function handleLogOut() {
-    // Add auth clear mutations/tokens handling here
-    router.push("/login");
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        router.push("/login");
+      },
+      onError: () => {
+        router.push("/login");
+      }
+    });
   }
+
 
   return (
     <div className="w-full flex flex-col">
@@ -86,10 +94,15 @@ export default function SettingsPage() {
       <button
         type="button"
         onClick={handleLogOut}
-        className="mt-5 flex items-center justify-center gap-2 rounded-2xl border-2 border-danger/20 hover:border-danger/40 bg-white py-3.5 text-xs font-black text-danger active:bg-danger/5 transition-all shadow-sm"
+        disabled={logoutMutation.isPending}
+        className="mt-5 flex items-center justify-center gap-2 rounded-2xl border-2 border-danger/20 hover:border-danger/40 bg-white py-3.5 text-xs font-black text-danger active:bg-danger/5 disabled:opacity-50 transition-all shadow-sm w-full"
       >
-        <LogOut className="h-4 w-4 stroke-[2.5]" />
-        Log out
+        {logoutMutation.isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <LogOut className="h-4 w-4 stroke-[2.5]" />
+        )}
+        {logoutMutation.isPending ? "Logging out..." : "Log out"}
       </button>
     </div>
   );
