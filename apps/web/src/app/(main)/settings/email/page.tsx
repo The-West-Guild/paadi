@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useEmailStart, useEmailVerify } from "@/features/settings/profile-hooks";
+import { toast } from "@/features/toast/store";
 import { Loader2, Mail, CheckCircle } from "lucide-react";
 
 export default function EmailSettingsPage() {
@@ -13,50 +14,47 @@ export default function EmailSettingsPage() {
   const [step, setStep] = useState<"enter_email" | "verify_code">("enter_email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const isPending = emailStartMutation.isPending || emailVerifyMutation.isPending;
 
   function handleStart(e: React.FormEvent) {
     e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
 
     if (!email.trim() || !email.includes("@")) {
-      setErrorMsg("Please enter a valid email address.");
+      toast.error("Please enter a valid email address.");
       return;
     }
 
     emailStartMutation.mutate(email, {
       onSuccess: () => {
         setStep("verify_code");
+        toast.success("Verification code sent to your email.");
       },
       onError: (err: any) => {
-        setErrorMsg(err.message ?? "Failed to initiate email verification.");
+        toast.error(err.message ?? "Failed to initiate email verification.");
       },
     });
   }
 
   function handleVerify(e: React.FormEvent) {
     e.preventDefault();
-    setErrorMsg("");
-    setSuccessMsg("");
 
     if (code.length !== 6) {
-      setErrorMsg("Verification code must be exactly 6 digits.");
+      toast.error("Verification code must be exactly 6 digits.");
       return;
     }
 
     emailVerifyMutation.mutate(code, {
       onSuccess: () => {
-        setSuccessMsg("Email successfully verified!");
+        setIsSuccess(true);
+        toast.success("Email successfully verified!");
         setTimeout(() => {
           router.push("/settings/profile");
         }, 2000);
       },
       onError: (err: any) => {
-        setErrorMsg(err.message ?? "Verification failed. Check the code and try again.");
+        toast.error(err.message ?? "Verification failed. Check the code and try again.");
       },
     });
   }
@@ -93,12 +91,6 @@ export default function EmailSettingsPage() {
                 Add and verify an email address to secure your account and receive split receipts.
               </p>
             </div>
-
-            {errorMsg && (
-              <div className="bg-danger/10 border border-danger/20 rounded-xl p-3 text-xs font-bold text-danger text-center">
-                ❌ {errorMsg}
-              </div>
-            )}
 
             <div className="flex flex-col gap-1.5 mt-2">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-ink/40 px-1">
@@ -141,18 +133,6 @@ export default function EmailSettingsPage() {
               </p>
             </div>
 
-            {errorMsg && (
-              <div className="bg-danger/10 border border-danger/20 rounded-xl p-3 text-xs font-bold text-danger text-center">
-                ❌ {errorMsg}
-              </div>
-            )}
-
-            {successMsg && (
-              <div className="bg-success/10 border border-success/20 rounded-xl p-3 text-xs font-bold text-success text-center">
-                ✅ {successMsg}
-              </div>
-            )}
-
             <div className="flex flex-col gap-1.5 mt-2">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-ink/40 px-1 text-center">
                 Verification Code
@@ -161,7 +141,7 @@ export default function EmailSettingsPage() {
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                disabled={isPending || !!successMsg}
+                disabled={isPending || isSuccess}
                 placeholder="000000"
                 className="w-full bg-white border-2 border-ink rounded-xl px-4 py-3.5 text-sm font-semibold text-ink placeholder:text-ink/30 text-center tracking-widest focus:outline-hidden focus:border-primary shadow-[2px_2px_0px_0px_#111827] disabled:opacity-50 transition-all"
               />
@@ -169,7 +149,7 @@ export default function EmailSettingsPage() {
 
             <button
               type="submit"
-              disabled={isPending || !!successMsg}
+              disabled={isPending || isSuccess}
               className="w-full rounded-2xl bg-primary py-4 px-4 font-bold text-ink text-base flex items-center justify-center gap-2 border-2 border-ink shadow-[0_4px_0px_0px_#111827] active:translate-y-[2px] active:shadow-[0_2px_0px_0px_#111827] disabled:opacity-50 disabled:active:translate-y-0 disabled:active:shadow-[0_4px_0px_0px_#111827] transition-all select-none mt-2"
             >
               {isPending ? (

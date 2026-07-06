@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmitSelfie } from "@/features/kyc/hooks";
+import { toast } from "@/features/toast/store";
 import { Loader2, Camera, UserCheck } from "lucide-react";
 
 export default function KycSelfiePage() {
@@ -12,18 +13,16 @@ export default function KycSelfiePage() {
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [base64Image, setBase64Image] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState("");
 
   const isPending = submitSelfieMutation.isPending;
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    setErrorMsg("");
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Check size (< 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setErrorMsg("Image must be smaller than 5MB.");
+      toast.error("Image must be smaller than 5MB.");
       return;
     }
 
@@ -47,7 +46,7 @@ export default function KycSelfiePage() {
 
   function handleSubmit() {
     if (!base64Image) {
-      setErrorMsg("Please take a selfie first.");
+      toast.error("Please take a selfie first.");
       return;
     }
 
@@ -56,7 +55,7 @@ export default function KycSelfiePage() {
         router.push("/verify/pending");
       },
       onError: (err: any) => {
-        setErrorMsg(err.message ?? "Liveness check failed. Ensure your face is clearly visible and matches the BVN record.");
+        toast.error(err.message ?? "Liveness check failed. Ensure your face is clearly visible and matches the BVN record.");
       },
     });
   }
@@ -91,11 +90,6 @@ export default function KycSelfiePage() {
           className="hidden"
         />
 
-        {errorMsg && (
-          <div className="w-full bg-danger/10 border border-danger/20 rounded-xl p-3 text-xs font-bold text-danger text-center mb-4 shrink-0">
-            ❌ {errorMsg}
-          </div>
-        )}
 
         {/* Capture Frame Target */}
         <button

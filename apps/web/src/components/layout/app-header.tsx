@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeft, Bell, Settings2 } from "lucide-react";
+import { ArrowLeft, Bell, Settings2,  } from "lucide-react";
 import { useHeaderStore } from "@/lib/header/store";
 
 const ROOT_TABS = ["/home", "/pots", "/activity", "/profile"];
 
-// Explicit type layout representing both static navigation targets and functional triggers
 type HeaderAction = {
   icon: React.ComponentType<{ className?: string }>;
   href?: string;
@@ -16,7 +15,7 @@ type HeaderAction = {
 
 const ROOT_TAB_ACTIONS: Record<string, HeaderAction | null> = {
   "/home": { icon: Bell, href: "/activity" },
-  "/pots": null, 
+  "/pots": null,
   "/activity": null,
   "/profile": { icon: Settings2, href: "/settings" },
 };
@@ -36,68 +35,68 @@ export function AppHeader() {
   const screenTitle = deriveTitle(pathname);
 
   return (
-    <div className="flex items-center justify-between w-full px-1 py-3 mb-4   shrink-0 select-none">
-
-      {/* LEFT — Back button navigation framework */}
-      <div className="w-8 flex items-center">
-        {!isRootTab && (
+    <div className="flex items-center justify-between w-full p-4 shrink-0 select-none">
+      
+      {/* LEFT SLOT — Conditional back navigation */}
+      <div className="w-11 h-11 flex items-center justify-start">
+        {!isRootTab ? (
           <button
             type="button"
             onClick={() => router.back()}
-            className="flex items-center justify-center h-8 w-8 rounded-xl text-ink/60 hover:text-ink active:scale-90 transition-all"
+            className="h-11 w-11 flex items-center justify-center border border-ink/10 rounded-xl bg-white text-ink shadow-xs active:scale-95 transition-all"
             aria-label="Go back"
           >
-            <ChevronLeft className="h-5 w-5 stroke-[2.5]" />
+            <ArrowLeft className="h-5 w-5 stroke-[2.5]" />
           </button>
+        ) : (
+          /* Empty placeholder tracking layout width when no back button exists */
+          <div className="w-11 h-11" />
         )}
       </div>
 
-      {/* CENTER — Branding wordmark or dynamic title engine */}
-      <div className="flex-1 flex items-center justify-center">
+      {/* CENTER SLOT — Static Branding vs. Dynamic Title Navigation */}
+      <div className="flex-1 flex items-center justify-center text-center px-2">
         {isRootTab ? (
           <span className="text-lg font-black tracking-tight text-ink">
             Paa<span className="text-primary">di</span>
           </span>
         ) : (
-          <span className="text-base font-black text-ink tracking-tight uppercase">
+          <h1 className="text-xs font-black tracking-tight text-ink uppercase">
             {screenTitle}
-          </span>
+          </h1>
         )}
       </div>
 
-      {/* RIGHT — Contextual actions slot */}
-      <div className="w-8 flex items-center justify-end">
-        {rightSlot && (() => {
-          const Icon = rightSlot.icon;
-          const iconClassName = "h-5 w-5 stroke-[2.25]";
+      {/* RIGHT SLOT — Contextual Actions Frame */}
+      <div className="w-11 h-11 flex items-center justify-end">
+        {rightSlot ? (
+          (() => {
+            const Icon = rightSlot.icon;
+            const iconClassName = "h-5 w-5 stroke-[2.5]";
+            const sharedButtonStyles = "h-11 w-11 flex items-center justify-center border border-ink/10 rounded-xl bg-white text-ink shadow-xs active:scale-95 transition-all";
 
-          // Scenario A: Standard Link Route
-          if (rightSlot.href) {
-            return (
-              <Link
-                href={rightSlot.href}
-                className="flex items-center justify-center h-8 w-8 rounded-xl text-ink/50 hover:text-ink active:scale-90 transition-all"
-              >
-                <Icon className={iconClassName} />
-              </Link>
-            );
-          }
+            if (rightSlot.href) {
+              return (
+                <Link href={rightSlot.href} className={sharedButtonStyles}>
+                  <Icon className={iconClassName} />
+                </Link>
+              );
+            }
 
-          // Scenario B: Functional Interceptor (e.g. Save form, filter data modal)
-          if (rightSlot.onPress) {
-            return (
-              <button
-                type="button"
-                onClick={rightSlot.onPress}
-                className="flex items-center justify-center h-8 w-8 rounded-xl text-ink/50 hover:text-ink active:scale-90 transition-all"
-              >
-                <Icon className={iconClassName} />
-              </button>
-            );
-          }
+            if (rightSlot.onPress) {
+              return (
+                <button type="button" onClick={rightSlot.onPress} className={sharedButtonStyles}>
+                  <Icon className={iconClassName} />
+                </button>
+              );
+            }
 
-          return null;
-        })()}
+            return <div className="w-11 h-11" />;
+          })()
+        ) : (
+          /* Structural placeholder box matching left slots perfectly when empty */
+          <div className="w-11 h-11" />
+        )}
       </div>
 
     </div>
@@ -109,12 +108,12 @@ function deriveTitle(pathname: string): string {
   if (!segments.length) return "Paadi";
 
   const titleMap: Record<string, string> = {
-    "create":   "Create Pot",
-    "edit":     "Edit Pot",
-    "verify":   "Verify Identity",
+    "create": "Create Pot",
+    "edit": "Edit Pot",
+    "verify": "Verify Identity",
     "settings": "Settings",
     "activity": "Activity",
-    "profile":  "Profile",
+    "profile": "Profile",
   };
 
   const last = segments[segments.length - 1];
@@ -123,7 +122,7 @@ function deriveTitle(pathname: string): string {
   if (last && titleMap[last]) return titleMap[last];
   if (first && titleMap[first]) return titleMap[first];
 
-  if (first === "pots" && segments.length > 1) return "Pot Details";
+  if (first === "pots" && segments.length > 1) return "Pot Overview";
   if (first === "pay") return "Pay Your Share";
 
   return (last ?? "Paadi")

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMe, useUpdateProfile, useChangeUsername } from "@/features/settings/profile-hooks"; // Adjust path if needed
 import { ChevronLeft, Loader2, User, AtSign, CheckCircle2 } from "lucide-react";
+import { toast } from "@/features/toast/store";
 import { ApiError } from "@/lib/api/error";
 
 export default function ProfileSettingsPage() {
@@ -17,8 +18,7 @@ export default function ProfileSettingsPage() {
   // Unified Form Local States
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+
   const [avatarUrl, setAvatarUrl] = useState("");
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   // Sync server data to local form inputs on initial query mount
@@ -41,11 +41,8 @@ export default function ProfileSettingsPage() {
 
   async function handleSaveChanges(e: React.FormEvent) {
     e.preventDefault();
-    setFormError(null);
-    setShowSuccessToast(false);
-
     if (!username.trim()) {
-      setFormError("Username handle cannot be empty.");
+      toast.error("Username handle cannot be empty.");
       return;
     }
 
@@ -78,15 +75,13 @@ export default function ProfileSettingsPage() {
     try {
       // Coordinate parallel mutation resolution paths cleanly
       await Promise.all(mutationQueue);
-      setShowSuccessToast(true);
-      // Auto-dismiss success notification frame after a short period
-      setTimeout(() => setShowSuccessToast(false), 3500);
+      toast.success("Profile updated successfully!");
     } catch (err) {
         const apiErr = err as ApiError | null;
         if (apiErr?.statusCode === 409) {
-          setFormError("That username is already taken. Try another.");
+          toast.error("That username is already taken. Try another.");
         } else {
-          setFormError(apiErr?.message ?? "Failed to save changes. Please try again.");
+          toast.error(apiErr?.message ?? "Failed to save changes. Please try again.");
         }
   }}
 
@@ -113,22 +108,7 @@ export default function ProfileSettingsPage() {
       ) : (
         <form onSubmit={handleSaveChanges} className="flex flex-col gap-5">
           
-          {/* SUCCESS STATUS POP */}
-          {showSuccessToast && (
-            <div className="rounded-2xl border-2 border-success/30 bg-success/5 p-4 flex items-center gap-3 shadow-sm animate-slide-up">
-              <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
-              <p className="text-xs font-bold text-ink">
-                Profile changes successfully updated!
-              </p>
-            </div>
-          )}
 
-          {/* GLOBAL FORM ERROR HANDLING BANNER */}
-          {formError && (
-            <div className="rounded-2xl border border-danger/20 bg-danger/5 p-4 text-xs font-bold text-danger">
-              ⚠️ {formError}
-            </div>
-          )}
 
           {/* AVATAR PICKER TRIGGER */}
 <div className="flex items-center gap-4 p-1">

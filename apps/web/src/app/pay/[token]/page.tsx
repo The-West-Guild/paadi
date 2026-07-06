@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { publicClient } from "@/lib/api/client";
-import { Loader2, Landmark, ShieldCheck, CreditCard, ExternalLink } from "lucide-react";
+import { Loader2, ShieldCheck, CreditCard, ExternalLink, ArrowRight, Users, Eye, Zap } from "lucide-react";
 
 export default function PayPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
@@ -23,10 +23,10 @@ export default function PayPage({ params }: { params: Promise<{ token: string }>
 
   if (isPending) {
     return (
-      <div className="flex h-dvh items-center justify-center bg-bg">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-10 w-10 text-primary animate-spin" />
-          <span className="text-xs font-bold text-ink/40 tracking-wider uppercase">Loading Payment Link...</span>
+      <div className="flex h-dvh items-center justify-center bg-[#f9fafb] p-6">
+        <div className="flex flex-col items-center gap-4 bg-white/80 backdrop-blur-md p-8 border border-[#111827]/10 shadow-[0_8px_32px_rgba(0,0,0,0.06)] rounded-2xl">
+          <Loader2 className="h-8 w-8 text-amber-500 animate-spin stroke-[2.5]" />
+          <span className="text-[10px] font-black text-[#111827]/50 tracking-wide uppercase">Loading Payment Link...</span>
         </div>
       </div>
     );
@@ -34,9 +34,13 @@ export default function PayPage({ params }: { params: Promise<{ token: string }>
 
   if (error || !view) {
     return (
-      <div className="flex h-dvh flex-col items-center justify-center bg-bg text-center px-6">
-        <p className="text-sm font-bold text-danger">❌ Payment link not found or expired.</p>
-        <p className="text-xs text-ink/40 mt-1 max-w-[240px]">Contact the pot organizer to check if this split link is still valid.</p>
+      <div className="flex h-dvh flex-col items-center justify-center bg-[#f9fafb] text-center px-6">
+        <div className="bg-white/85 backdrop-blur-md border border-[#111827]/10 p-6 rounded-2xl max-w-sm w-full shadow-[0_12px_32px_rgba(0,0,0,0.08)]">
+          <p className="text-xs font-black text-red-600 uppercase tracking-wide">❌ Payment link not found or expired.</p>
+          <p className="text-[11px] font-semibold text-[#111827]/50 mt-2 max-w-[240px] mx-auto leading-relaxed">
+            Contact the pot organizer to check if this split link is still valid.
+          </p>
+        </div>
       </div>
     );
   }
@@ -45,56 +49,61 @@ export default function PayPage({ params }: { params: Promise<{ token: string }>
   const overallProgressPct = view.progress.targetKobo > 0 ? Math.min(100, Math.round((view.progress.collectedKobo / view.progress.targetKobo) * 100)) : 0;
 
   return (
-    <div className="flex h-dvh flex-col bg-linear-to-br from-bg via-bg to-secondary/10 px-6 pb-8 pt-5 justify-between max-w-sm mx-auto overflow-y-auto">
+    <div className="flex h-dvh flex-col bg-linear-to-br from-[#f9fafb] via-[#f9fafb] to-[#f472b6]/5 px-5 pb-8 pt-5 justify-between max-w-sm mx-auto overflow-y-auto font-sans">
+      
       {/* BRANDING HEADER */}
-      <div className="flex items-center justify-center w-full shrink-0 py-2 border-b border-slate-100 bg-white/40 backdrop-blur-md rounded-2xl">
-        <span className="text-xl font-black tracking-tight text-ink">Paadi</span>
+      <div className="flex items-center justify-center w-full shrink-0 py-3.5 border border-[#111827]/10 bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+        <span className="text-lg font-black tracking-tight text-[#111827] uppercase">Paadi</span>
       </div>
 
       {/* CORE PAYMENT DETAIL AREA */}
-      <div className="flex-1 flex flex-col justify-center w-full my-auto max-y-[450px]">
+      <div className="flex-1 flex flex-col justify-center w-full my-auto max-h-[460px] gap-5">
+        
         {/* Pot Title Messaging */}
-        <div className="text-center mb-6">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-ink/30">Contribution Split</span>
-          <h1 className="text-xl font-black tracking-tight text-ink leading-tight mt-1">
+        <div className="text-center">
+          <span className="text-[10px] font-black uppercase tracking-wider text-[#111827]/40 bg-white/60 border border-[#111827]/5 px-2.5 py-1 rounded-full">
+            Contribution Split
+          </span>
+          <h1 className="text-xl font-black tracking-tight text-[#111827] uppercase leading-tight mt-3 px-2">
             {view.potTitle}
           </h1>
         </div>
 
         {/* Organizer details card */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex items-center gap-3.5 mb-4 text-left">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary border border-ink text-sm font-black text-ink shadow-xs">
+        <div className="bg-white/90 backdrop-blur-md border border-[#111827]/10 rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex items-center gap-4 text-left">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#ffd200] border border-[#111827]/20 text-sm font-black text-[#111827] shadow-xs">
             {view.organizerName[0].toUpperCase()}
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-[10px] font-bold text-ink/40 uppercase tracking-wider">Organizer</span>
-            <span className="font-extrabold text-ink leading-tight text-sm mt-0.5">{view.organizerName}</span>
-            <span className="text-xs font-semibold text-ink/30 mt-0.5">@{view.organizerHandle}</span>
+            <span className="text-[9px] font-black text-[#111827]/40 uppercase tracking-wide">Organizer</span>
+            <span className="font-black text-[#111827] leading-tight text-sm mt-0.5 uppercase tracking-tight">{view.organizerName}</span>
+            <span className="text-[11px] font-bold text-[#111827]/30 mt-0.5">@{view.organizerHandle}</span>
           </div>
         </div>
 
         {/* Payment Amount Card */}
-        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] flex flex-col gap-4 text-center">
+        <div className="bg-white border border-[#111827]/10 rounded-2xl p-5 shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex flex-col gap-4 text-center">
           <div className="flex flex-col items-center">
-            <span className="text-[10px] font-extrabold text-ink/40 tracking-wider uppercase">Your Split Share ({view.splitLabel})</span>
-            <span className="text-2xl font-black text-ink tracking-tight mt-1">
+            <span className="text-[10px] font-black text-[#111827]/40 tracking-wide uppercase">Your Split Share ({view.splitLabel})</span>
+            <span className="text-2xl font-mono font-black text-[#111827] tracking-tight mt-1.5">
               ₦{(view.shareKobo / 100).toLocaleString()}
             </span>
           </div>
 
-          <div className="w-full h-[1px] bg-slate-100" />
+          <div className="w-full h-[1px] bg-[#111827]/5" />
 
           {/* Overall pot progress details */}
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between text-[10px] font-bold text-ink/40">
+          <div className="flex flex-col gap-2.5">
+            <div className="flex justify-between text-[10px] font-black uppercase tracking-wide text-[#111827]/40">
               <span>Overall pot progress</span>
-              <span className="text-ink">
-                ₦{(view.progress.collectedKobo / 100).toLocaleString()} / ₦{(view.progress.targetKobo / 100).toLocaleString()}
+              <span className="text-[#111827] font-mono">
+                ₦{(view.progress.collectedKobo / 100).toLocaleString()}
               </span>
             </div>
-            <div className="w-full h-2 bg-slate-50 border border-slate-100 rounded-full overflow-hidden">
+            
+            <div className="w-full h-3 bg-slate-100/80 border border-[#111827]/5 rounded-full overflow-hidden p-[1px]">
               <div
-                className="h-full bg-primary rounded-full transition-all duration-500"
+                className="h-full bg-[#ffd200] rounded-full transition-all duration-500 shadow-[inset_-1px_0_3px_rgba(0,0,0,0.05)]"
                 style={{ width: `${overallProgressPct}%` }}
               />
             </div>
@@ -102,22 +111,65 @@ export default function PayPage({ params }: { params: Promise<{ token: string }>
         </div>
       </div>
 
-      {/* FOOTER CALL TO ACTION */}
+      {/* FOOTER CALL TO ACTION & ONBOARDING PROMPT */}
       <div className="w-full mt-auto pt-4 shrink-0">
         {isPaid ? (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex flex-col items-center gap-2.5 text-green-900 text-center animate-fade-in">
-            <div className="h-10 w-10 rounded-full bg-success/15 flex items-center justify-center text-success border border-success/10">
-              <ShieldCheck className="h-6 w-6 stroke-[2.5]" />
+          <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-3 duration-500">
+            {/* Payment success banner */}
+            <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-3.5 text-left">
+              <div className="h-9 w-9 shrink-0 rounded-xl bg-[#10b981]/10 flex items-center justify-center text-[#10b981] border border-[#10b981]/20">
+                <ShieldCheck className="h-5 w-5 stroke-[2.5]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black uppercase tracking-wide text-emerald-800">Payment Verified</span>
+                <p className="text-[10px] text-emerald-900/60 font-semibold mt-0.5">
+                  The organizer has been credited and notified immediately.
+                </p>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-extrabold">Contribution Paid!</span>
-              <p className="text-[10px] text-green-900/60 font-semibold mt-1">
-                Thank you. The organizer has been notified of your payment.
-              </p>
+
+            {/* Premium Onboarding Hook Card */}
+            <div className="bg-white/90 backdrop-blur-md border border-[#111827]/10 rounded-2xl p-5 shadow-[0_12px_32px_rgba(0,0,0,0.05)] flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#f472b6]">Track your split</span>
+                <h3 className="text-sm font-black text-[#111827] uppercase tracking-tight">See who has paid inside Paadi</h3>
+                <p className="text-[11px] font-medium text-[#111827]/50 leading-relaxed mt-0.5">
+                  Don't be left guessing. Create an account to monitor this group pot directly.
+                </p>
+              </div>
+
+              {/* Value Propositions */}
+              <div className="flex flex-col gap-2.5 border-t border-b border-[#111827]/5 py-3">
+                <div className="flex items-center gap-2.5 text-left">
+                  <Eye className="h-3.5 w-3.5 text-[#ffd200] stroke-[3]" />
+                  <span className="text-[10px] font-bold text-[#111827]/70 uppercase tracking-wide">Live tracking of other members</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-left">
+                  <Users className="h-3.5 w-3.5 text-[#ffd200] stroke-[3]" />
+                  <span className="text-[10px] font-bold text-[#111827]/70 uppercase tracking-wide">Start your own collection pots</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-left">
+                  <Zap className="h-3.5 w-3.5 text-[#ffd200] stroke-[3]" />
+                  <span className="text-[10px] font-bold text-[#111827]/70 uppercase tracking-wide">Instant, automated bank payouts</span>
+                </div>
+              </div>
+
+              {/* Conversion Buttons */}
+              <div className="flex flex-col gap-2">
+                <a
+                  href="https://paadi.app/signup" // Update with real registration flow path or app store link
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full rounded-xl bg-[#ffd200] py-3 px-4 font-black text-[#111827] text-xs uppercase tracking-wide flex items-center justify-center gap-2 border border-[#111827]/10 shadow-[0_4px_12px_rgba(255,210,0,0.25)] active:scale-98 transition-all text-center select-none"
+                >
+                  <span>Claim Your Free Account</span>
+                  <ArrowRight className="h-3.5 w-3.5 stroke-[3]" />
+                </a>
+              </div>
             </div>
           </div>
         ) : view.potStatus === "cancelled" ? (
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center text-ink/50 text-xs font-bold">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center text-[#111827]/50 text-xs font-black uppercase tracking-wide">
             🚫 This split pot has been cancelled by the organizer.
           </div>
         ) : view.checkoutUrl ? (
@@ -125,14 +177,14 @@ export default function PayPage({ params }: { params: Promise<{ token: string }>
             href={view.checkoutUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full rounded-2xl bg-primary py-4 px-4 font-bold text-ink text-base flex items-center justify-center gap-2 border-2 border-ink shadow-[0_4px_0px_0px_#111827] active:translate-y-[2px] active:shadow-[0_2px_0px_0px_#111827] transition-all text-center select-none"
+            className="w-full rounded-2xl bg-[#ffd200] py-4 px-5 font-black text-[#111827] text-sm uppercase tracking-wide flex items-center justify-center gap-2.5 border border-[#111827]/10 shadow-[0_8px_24px_rgba(255,210,0,0.35)] active:scale-98 active:shadow-[0_4px_12px_rgba(255,210,0,0.2)] transition-all text-center select-none"
           >
-            <CreditCard className="h-5 w-5 stroke-[2]" />
+            <CreditCard className="h-4.5 w-4.5 stroke-[2.5]" />
             <span>Pay with Nomba Checkout</span>
-            <ExternalLink className="h-4 w-4 stroke-[2]" />
+            <ExternalLink className="h-4 w-4 stroke-[2.5] opacity-60" />
           </a>
         ) : (
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center text-ink/50 text-xs font-bold">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center text-[#111827]/50 text-xs font-black uppercase tracking-wide">
             ⏳ Checkout session is not initialized. Try again.
           </div>
         )}

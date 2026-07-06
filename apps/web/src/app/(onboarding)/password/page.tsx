@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Check, X } from "lucide-react";
 import { useSignupPassword } from "@/features/onboarding/hooks";
+import { toast } from "@/features/toast/store";
 import { ApiError } from "@/lib/api/error";
 
 export default function PasswordPage() {
@@ -26,6 +27,13 @@ export default function PasswordPage() {
 
     signupPassword.mutate(password, {
       onSuccess: () => router.push("/pin"),
+      onError: (err: Error) => {
+        toast.error(
+          err.message === "phone not verified"
+            ? "Something went wrong earlier in signup — please start again."
+            : "Couldn't save your password. Please try again."
+        );
+      }
     });
   }
 
@@ -34,20 +42,7 @@ export default function PasswordPage() {
   return (
     <div className="flex h-dvh flex-col bg-linear-to-br from-bg via-bg to-secondary/10 px-6 pb-8 pt-5 justify-between max-w-sm mx-auto overflow-y-auto">
       
-      {/* HEADER SECTION */}
-      <div className="flex items-center justify-between w-full relative shrink-0">
-        <button 
-          type="button"
-          onClick={() => router.back()}
-          className="text-xl font-bold p-2 text-ink/70 hover:text-ink transition-colors z-30"
-        >
-          ←
-        </button>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-xl font-black tracking-tight text-ink">Paadi</span>
-        </div>
-        <div className="w-10" />
-      </div>
+     
 
       {/* MAIN FORM BODY */}
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col items-start justify-start pt-6 w-full">
@@ -91,13 +86,6 @@ export default function PasswordPage() {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {error && (
-            <p className="px-1 text-xs font-semibold text-danger">
-              {error.message === "phone not verified"
-                ? "Something went wrong earlier in signup — please start again."
-                : "Couldn't save your password. Please try again."}
-            </p>
-          )}
         </div>
 
         {/* REQUIREMENTS TRACKER CARD (Softened Subdued Layout) */}

@@ -17,15 +17,7 @@ export default function GetStartedPage() {
   }
 
   return (
-    <div className="flex h-dvh flex-col bg-bg px-6 pb-8 pt-5 justify-between max-w-md mx-auto">
-      
-      {/* HEADER SECTION */}
-      <div className="flex items-center justify-between w-full">
-        <span className="text-xl font-black tracking-tight text-ink">Paadi</span>
-        <span className="text-xs font-bold text-ink/50 bg-ink/5 px-2.5 py-1 rounded-full">
-          Step 1/3
-        </span>
-      </div>
+    <div className="no-scrolbar flex h-dvh flex-col bg-bg px-6 pb-8 pt-5 justify-between mx-auto">
 
       {/* ILLUSTRATION COMPOSITION AREA */}
       <div className="flex flex-1 items-center justify-center py-4 w-full">

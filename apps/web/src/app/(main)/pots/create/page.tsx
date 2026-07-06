@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCreatePotStore } from "@/features/create-pot/store";
+import { toast } from "@/features/toast/store";
 import {
   useElectricityProviders,
   useCableProviders,
@@ -27,7 +28,7 @@ export default function CreatePotPage() {
   const lookupElectricity = useLookupElectricityCustomer();
   const lookupCable = useLookupCableCustomer();
 
-  const [errorMsg, setErrorMsg] = useState("");
+
   const [bvnNotice, setBvnNotice] = useState(false);
 
   // Auto-set primary payout account if bank_payout is selected
@@ -44,21 +45,20 @@ export default function CreatePotPage() {
   const isVerifying = lookupElectricity.isPending || lookupCable.isPending;
 
   function handleVerifyBiller() {
-    setErrorMsg("");
     store.setField("billerCustomerName", undefined);
 
     if (!store.billerProductCode) {
-      setErrorMsg("Please select a provider.");
+      toast.error("Please select a provider.");
       return;
     }
     if (!store.billerCustomerId) {
-      setErrorMsg("Please enter the customer ID / meter / smartcard number.");
+      toast.error("Please enter the customer ID / meter / smartcard number.");
       return;
     }
 
     if (store.billerCategory === "electricity") {
       if (!store.meterType) {
-        setErrorMsg("Please select a meter type.");
+        toast.error("Please select a meter type.");
         return;
       }
       lookupElectricity.mutate(
@@ -72,7 +72,7 @@ export default function CreatePotPage() {
             store.setField("billerCustomerName", res.customerName);
           },
           onError: (err: any) => {
-            setErrorMsg(err.message ?? "Meter verification failed. Check the details.");
+            toast.error(err.message ?? "Meter verification failed. Check the details.");
           }
         }
       );
@@ -87,7 +87,7 @@ export default function CreatePotPage() {
             store.setField("billerCustomerName", res.customerName);
           },
           onError: (err: any) => {
-            setErrorMsg(err.message ?? "Smartcard verification failed. Check the details.");
+            toast.error(err.message ?? "Smartcard verification failed. Check the details.");
           }
         }
       );
@@ -95,28 +95,26 @@ export default function CreatePotPage() {
   }
 
   function handleNext() {
-    setErrorMsg("");
-
     if (store.settlementType === "bank_payout") {
       if (!store.payoutAccountId) {
-        setErrorMsg("Please select or add a payout account.");
+        toast.error("Please select or add a payout account.");
         return;
       }
     } else {
       if (!store.billerCategory) {
-        setErrorMsg("Please select a bill category.");
+        toast.error("Please select a bill category.");
         return;
       }
       if (!store.billerProductCode) {
-        setErrorMsg("Please select a provider/plan.");
+        toast.error("Please select a provider/plan.");
         return;
       }
       if (!store.billerCustomerId) {
-        setErrorMsg("Please enter customer ID.");
+        toast.error("Please enter customer ID.");
         return;
       }
       if (!store.billerCustomerName) {
-        setErrorMsg("Please verify the biller account before proceeding.");
+        toast.error("Please verify the biller account before proceeding.");
         return;
       }
     }
@@ -134,11 +132,7 @@ export default function CreatePotPage() {
         </span>
       </div>
 
-      {errorMsg && (
-        <div className="mt-4 bg-danger/10 border border-danger/20 rounded-xl p-3 text-xs font-bold text-danger text-center">
-          ❌ {errorMsg}
-        </div>
-      )}
+
 
       {/* SETTLEMENT TYPE PICKER */}
       <div className="mt-5 flex flex-col gap-2">

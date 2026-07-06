@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useResendOtp, useVerifyPhone } from "@/features/onboarding/hooks";
+import { toast } from "@/features/toast/store";
 import { ApiError } from "@/lib/api/error";
 import { AlarmClock } from "lucide-react";
 
@@ -32,6 +33,9 @@ export default function OtpPage() {
     if (code.length === CODE_LENGTH && !verifyPhone.isPending) {
       verifyPhone.mutate(code, {
         onSuccess: () => router.push("/name"),
+        onError: (err: Error) => {
+          toast.error(err.message ?? "Invalid verification code.");
+        }
       });
     }
   }, [code, router]);
@@ -102,10 +106,14 @@ export default function OtpPage() {
     resendOtp.mutate(undefined, {
       onSuccess: () => {
         console.log("Resend mutation successful.");
+        toast.success("Verification code resent.");
         setCooldown(RESEND_COOLDOWN_S);
         setDigits(Array(CODE_LENGTH).fill(""));
         setTimeout(() => inputRefs.current[0]?.focus(), 50);
       },
+      onError: (err: Error) => {
+        toast.error(err.message ?? "Failed to resend code.");
+      }
     });
   }
 
@@ -117,19 +125,7 @@ export default function OtpPage() {
   return (
     <div className="flex h-dvh flex-col bg-linear-to-br from-bg via-bg to-secondary/10 px-4 pb-6 pt-5 justify-between max-w-sm mx-auto overflow-y-auto">
       
-      {/* HEADER SECTION */}
-      <div className="flex items-center justify-between w-full relative shrink-0">
-        <button 
-          onClick={() => router.back()}
-          className="text-xl font-bold p-2 text-ink/80 hover:text-ink transition-colors z-30"
-        >
-          ←
-        </button>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-xl font-black tracking-tight text-ink">Paadi</span>
-        </div>
-        <div className="w-10" />
-      </div>
+     
 
       {/* CORE CONTENT BLOCK */}
       <div className="flex-1 flex flex-col items-center justify-start pt-6 w-full">

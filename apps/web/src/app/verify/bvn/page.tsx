@@ -3,22 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmitBvn } from "@/features/kyc/hooks";
+import { toast } from "@/features/toast/store";
 import { Loader2, Hash } from "lucide-react";
 
 export default function KycBvnPage() {
   const router = useRouter();
   const submitBvnMutation = useSubmitBvn();
   const [bvn, setBvn] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
 
   const isPending = submitBvnMutation.isPending;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErrorMsg("");
 
     if (!/^\d{11}$/.test(bvn)) {
-      setErrorMsg("BVN must be exactly 11 digits.");
+      toast.error("BVN must be exactly 11 digits.");
       return;
     }
 
@@ -27,7 +26,7 @@ export default function KycBvnPage() {
         router.push("/verify/selfie");
       },
       onError: (err: any) => {
-        setErrorMsg(err.message ?? "BVN name check failed. Ensure your registered profile name matches the bank records.");
+        toast.error(err.message ?? "BVN name check failed. Ensure your registered profile name matches the bank records.");
       },
     });
   }
@@ -64,12 +63,6 @@ export default function KycBvnPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {errorMsg && (
-            <div className="bg-danger/10 border border-danger/20 rounded-xl p-3 text-xs font-bold text-danger text-center">
-              ❌ {errorMsg}
-            </div>
-          )}
-
           <div className="flex flex-col gap-1.5 mt-2">
             <label className="text-[10px] font-extrabold uppercase tracking-wider text-ink/40 px-1">
               Bank Verification Number (BVN)

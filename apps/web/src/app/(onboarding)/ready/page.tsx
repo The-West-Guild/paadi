@@ -19,13 +19,7 @@ export default function OnboardingReadyPage() {
   return (
     <div className="flex h-dvh flex-col bg-linear-to-br from-bg via-bg to-secondary/10 px-6 pb-8 pt-5 justify-between max-w-sm mx-auto overflow-y-auto">
       
-      {/* HEADER SECTION */}
-      <div className="flex items-center justify-between w-full relative shrink-0">
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-xl font-black tracking-tight text-ink">Paadi</span>
-        </div>
-        <div className="w-10" />
-      </div>
+     
 
       {/* CORE CELEBRATION CONTEXT */}
       <div className="flex-1 flex flex-col items-center justify-center w-full my-auto max-y-[420px]">

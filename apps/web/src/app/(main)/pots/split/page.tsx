@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCreatePotStore, SplitInput } from "@/features/create-pot/store";
+import { toast } from "@/features/toast/store";
 import { Plus, Trash2, HelpCircle } from "lucide-react";
 
 export default function SplitPotPage() {
@@ -16,7 +17,7 @@ export default function SplitPotPage() {
   );
   const [splitMode, setSplitMode] = useState(store.splitMode);
   const [splits, setSplits] = useState<SplitInput[]>(store.splits);
-  const [errorMsg, setErrorMsg] = useState("");
+
 
   // Sync back to store on every change
   useEffect(() => {
@@ -56,19 +57,17 @@ export default function SplitPotPage() {
   }
 
   function handleNext() {
-    setErrorMsg("");
-
     // General Validations
     if (!title.trim() || title.length < 3 || title.length > 120) {
-      setErrorMsg("Title must be between 3 and 120 characters.");
+      toast.error("Title must be between 3 and 120 characters.");
       return;
     }
     if (totalKobo <= 0) {
-      setErrorMsg("Total collection amount must be greater than ₦0.");
+      toast.error("Total collection amount must be greater than ₦0.");
       return;
     }
     if (splits.some((s) => !s.label.trim())) {
-      setErrorMsg("All participants must have a label.");
+      toast.error("All participants must have a label.");
       return;
     }
 
@@ -76,7 +75,7 @@ export default function SplitPotPage() {
     if (splitMode === "amount") {
       const sum = splits.reduce((sum, s) => sum + (s.amountKobo || 0), 0);
       if (sum !== totalKobo) {
-        setErrorMsg(
+        toast.error(
           `The sum of all split amounts (₦${(sum / 100).toLocaleString()}) must equal the total pot amount (₦${(
             totalKobo / 100
           ).toLocaleString()}).`
@@ -86,7 +85,7 @@ export default function SplitPotPage() {
     } else if (splitMode === "percent") {
       const sum = splits.reduce((sum, s) => sum + (s.percent || 0), 0);
       if (sum !== 100) {
-        setErrorMsg(`The sum of all split percentages (${sum}%) must equal exactly 100%.`);
+        toast.error(`The sum of all split percentages (${sum}%) must equal exactly 100%.`);
         return;
       }
     }
@@ -104,11 +103,7 @@ export default function SplitPotPage() {
         </span>
       </div>
 
-      {errorMsg && (
-        <div className="mt-4 bg-danger/10 border border-danger/20 rounded-xl p-3 text-xs font-bold text-danger text-center">
-          ❌ {errorMsg}
-        </div>
-      )}
+
 
       {/* BASIC POT FIELDS */}
       <div className="mt-5 flex flex-col gap-4 bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">

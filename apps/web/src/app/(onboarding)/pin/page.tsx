@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Delete } from "lucide-react";
 import { useSignupPin } from "@/features/onboarding/hooks";
+import { toast } from "@/features/toast/store";
 import { ApiError } from "@/lib/api/error";
 
 export default function PinSetupPage() {
@@ -29,6 +30,13 @@ export default function PinSetupPage() {
 
     signupPin.mutate(pin.join(""), {
       onSuccess: () => router.push("/biometric"),
+      onError: (err: any) => {
+        toast.error(
+          err.statusCode === 401
+            ? "That doesn't look right. Try a different PIN."
+            : "Couldn't set your PIN. Please try again."
+        );
+      }
     });
 
     
@@ -36,21 +44,7 @@ export default function PinSetupPage() {
 
   return (
     <div className="flex h-dvh flex-col bg-linear-to-br from-bg via-bg to-secondary/10 px-6 pb-8 pt-5 justify-between max-w-sm mx-auto overflow-y-auto select-none">
-      
-      {/* HEADER SECTION */}
-      <div className="flex items-center justify-between w-full relative shrink-0">
-        <button 
-          type="button"
-          onClick={() => router.back()}
-          className="text-xl font-bold p-2 text-ink/70 hover:text-ink transition-colors z-30"
-        >
-          ←
-        </button>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-xl font-black tracking-tight text-ink">Paadi</span>
-        </div>
-        <div className="w-10" />
-      </div>
+
 
       {/* CORE DISPLAY HUB */}
       <div className="flex-1 flex flex-col items-center justify-center w-full max-y-[380px] my-auto">
@@ -87,13 +81,7 @@ export default function PinSetupPage() {
           })}
         </div>
 
-        {error && (
-          <p className="mb-6 px-4 text-center text-xs font-semibold text-danger">
-            {error.statusCode === 401
-              ? "That doesn't look right. Try a different PIN."
-              : "Couldn't set your PIN. Please try again."}
-          </p>
-        )}
+        
 
         {/* TOUCH INTERACTION GRID MATRIX */}
         <div className="w-full grid grid-cols-3 gap-y-4 gap-x-6 px-4">

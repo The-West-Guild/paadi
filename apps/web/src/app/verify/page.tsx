@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useKycStatus } from "@/features/kyc/hooks";
+import { toast } from "@/features/toast/store";
 import { Loader2, ShieldCheck, ShieldAlert, ChevronRight, UserCheck } from "lucide-react";
 
 export default function KycPage() {

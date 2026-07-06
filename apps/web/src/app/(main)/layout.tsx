@@ -44,7 +44,7 @@ export default function MainLayout({
       <main className="relative h-full w-full max-w-sm mx-auto flex flex-col bg-transparent">
 
         {/* HEADER — fixed top chrome */}
-        <div className="px-5 shrink-0">
+        <div className="shrink-0">
           <AppHeader />
         </div>
 

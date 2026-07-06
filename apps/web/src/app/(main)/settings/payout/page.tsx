@@ -11,6 +11,7 @@ import {
   useDeletePayoutAccount 
 } from "@/features/settings/payout-hooks"; // Adjust path as needed
 import { ChevronLeft, Plus, CheckCircle2, Trash2, ShieldCheck, Loader2, Delete, Landmark } from "lucide-react";
+import { toast } from "@/features/toast/store";
 import { ApiError } from "@/lib/api/error";
 
 
@@ -90,6 +91,7 @@ export default function PayoutAccountsPage() {
       { bankCode, accountNumber, pin: pin.join("") },
       {
         onSuccess: () => {
+          toast.success("Payout account added successfully!");
           // Step F: Success Reset & Return
           setMode("list");
           setAddStep("input");
@@ -97,8 +99,12 @@ export default function PayoutAccountsPage() {
           setAccountNumber("");
           setPin([]);
         },
-        onError: () => {
-          // Wipe entered pin on 401/error so user can immediately re-enter
+        onError: (err: any) => {
+          toast.error(
+            err.statusCode === 401
+              ? "Incorrect PIN. Please try again."
+              : err.message ?? "Failed to add account. Try again."
+          );
           setPin([]);
         }
       }
@@ -112,11 +118,17 @@ export default function PayoutAccountsPage() {
       { id: deletingId, pin: deletePin.join("") },
       {
         onSuccess: () => {
+          toast.success("Payout account removed.");
           setShowDeleteModal(false);
           setDeletingId(null);
           setDeletePin([]);
         },
-        onError: () => {
+        onError: (err: any) => {
+          toast.error(
+            err.statusCode === 401
+              ? "Incorrect PIN. Please try again."
+              : err.message ?? "Delete failed. Try again."
+          );
           setDeletePin([]);
         }
       }
@@ -178,7 +190,14 @@ export default function PayoutAccountsPage() {
               >
                 <button
                   type="button"
-                  onClick={() => !acc.isPrimary && setPrimaryMutation.mutate(acc.id)}
+                  onClick={() => {
+                    if (!acc.isPrimary) {
+                      setPrimaryMutation.mutate(acc.id, {
+                        onSuccess: () => toast.success("Primary payout account updated."),
+                        onError: (err: Error) => toast.error(err.message ?? "Failed to update primary account.")
+                      });
+                    }
+                  }}
                   className="flex-1 flex items-start gap-3 text-left"
                 >
                   <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-ink/60 shrink-0 mt-0.5">
@@ -338,13 +357,7 @@ export default function PayoutAccountsPage() {
                 ))}
               </div>
 
-              {createMutation.error && (
-                <p className="text-xs font-black text-danger mb-4">
-                  {createError?.statusCode === 401 
-                    ? "❌ Incorrect security PIN code. Try again." 
-                    : "❌ Registration rejected. Please try again."}
-                </p>
-              )}
+
 
               {/* Premium Numeric Matrix */}
               <div className="w-full grid grid-cols-3 gap-y-4 gap-x-6 px-4 mb-6">
@@ -424,11 +437,7 @@ export default function PayoutAccountsPage() {
               ))}
             </div>
 
-            {deleteMutation.error && (
-              <p className="text-center text-xs font-black text-danger mb-4">
-                {deleteError?.statusCode === 401 ? "❌ Invalid PIN code" : "❌ Request failed"}
-              </p>
-            )}
+
 
             {/* Miniature Input Core */}
             <div className="w-full grid grid-cols-3 gap-y-2 gap-x-4 px-2 mb-6">

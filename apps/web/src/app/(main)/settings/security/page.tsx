@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Lock, LogOut, ShieldAlert, Delete, Loader2, CheckCircle2 } from "lucide-react";
 import { useChangePin, useLogout, useLogoutAll, useVerifyPin } from "@/features/settings/profile-hooks";
+import { toast } from "@/features/toast/store";
 import { ApiError } from "@/lib/api/error";
 
 type ChangePinStep = "menu" | "current" | "new" | "confirm" | "success";
@@ -32,10 +33,13 @@ export default function SecurityPage() {
     changePin.mutate(
       { currentPin: currentPin.join(""), newPin: newPin.join("") },
       {
-        onSuccess: () => setPinStep("success"),
+        onSuccess: () => {
+          toast.success("PIN updated successfully!");
+          setPinStep("success");
+        },
         onError: () => {
-          // wrong current PIN -> send them back to re-enter it, don't
-          // silently sit on the confirm screen with a PIN that won't work
+          // wrong current PIN -> send them back to re-enter it
+          toast.error("Incorrect PIN. Please try again.");
           setCurrentPin([]);
           setPinStep("current");
         },
@@ -71,9 +75,10 @@ export default function SecurityPage() {
         verifyPin.mutate(currentPin.join(""), {
             onSuccess: () => setPinStep("new"),
             onError: () => {
+                toast.error("That PIN didn't match. Try again.");
                 setCurrentPin([]);
                 setFlowError("That PIN didn't match. Try again.");
-              },// stay on "current", show the error
+              },
           });
           return;
     } else if (pinStep === "new" && newPin.length === maxLength) {
@@ -104,6 +109,9 @@ export default function SecurityPage() {
   function handleLogoutThisDevice() {
     logout.mutate(undefined, {
       onSuccess: () => router.push("/welcome"),
+      onError: (err: Error) => {
+        toast.error(err.message ?? "Logout failed. Please try again.");
+      }
     });
   }
 
@@ -113,6 +121,9 @@ export default function SecurityPage() {
         setShowLogoutAllModal(false);
         router.push("/welcome");
       },
+      onError: (err: Error) => {
+        toast.error(err.message ?? "Logout failed. Please try again.");
+      }
     });
   }
 

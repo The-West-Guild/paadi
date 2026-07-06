@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSignupStart } from "@/features/onboarding/hooks";
+import { ArrowLeft } from "lucide-react";
+import { toast } from "@/features/toast/store";
 import { ApiError } from "@/lib/api/error";
 import Image from 'next/image';
 
@@ -21,25 +23,16 @@ export default function PhonePage() {
     const fullPhone = `+234${phone.replace(/^0/, "")}`;
     signupStart.mutate(fullPhone, {
       onSuccess: () => router.push("/otp"),
+      onError: (err: Error) => {
+        toast.error(err.message ?? "Failed to send code. Try again.");
+      }
     });
   }
 
   return (
     <div className="flex h-dvh flex-col bg-linear-to-br from-bg via-bg to-secondary/10 px-6 pb-8 pt-5 justify-between max-w-md mx-auto">
       
-      {/* HEADER: Back Arrow + Centered Title */}
-      <div className="flex items-center justify-between w-full relative">
-        <button 
-          onClick={() => router.back()}
-          className="text-xl font-bold p-1 text-ink/80 hover:text-ink transition-colors z-10"
-        >
-          ←
-        </button>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xl font-bold tracking-tight text-ink">Paadi</span>
-        </div>
-        <div className="w-7" /> {/* Spacer to balance the flexbox */}
-      </div>
+      
 
       {/* MID SECTION: Illustration & Text */}
       <div className="flex-1 flex flex-col items-center justify-center w-full my-auto">

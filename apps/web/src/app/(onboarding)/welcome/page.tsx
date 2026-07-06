@@ -53,18 +53,7 @@ export default function WelcomePage() {
     <div className="flex h-dvh flex-col bg-bg px-6 pb-8 pt-2 justify-between max-w-md mx-auto">
       
       {/* HEADER SECTION */}
-      <div className="sticky top-0 z-50 bg-bg -mx-6 px-6 py-4 flex items-center justify-between border-b border-ink/5 shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
-        {/* Brand Logo Header */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-xl font-black tracking-tight text-ink">Paadi</span>
-        </div>
-        <button
-          onClick={handleSkip}
-          className="text-md font-semibold text-amber-500 hover:text-primary transition-colors"
-        >
-          Skip
-        </button>
-      </div>
+      
 
       {/* DYNAMIC ILLUSTRATION AREA */}
       <div className="flex flex-1 items-center justify-center py-2 w-full">

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Fingerprint, Loader2 } from "lucide-react";
 import { useRegisterDevice } from "@/features/onboarding/hooks";
 import { useOnboardingStore } from "@/features/onboarding/store";
+import { toast } from "@/features/toast/store";
 
 export default function BiometricPage() {
   const router = useRouter();
@@ -32,8 +33,9 @@ export default function BiometricPage() {
           setBiometricEnabled(true);
           router.push("/ready");
         },
-        onError: () => {
+        onError: (err: Error) => {
           // If native web credentials fail or server fails, still let the user proceed
+          toast.warning(err.message ?? "Biometric setup skipped.");
           setBiometricEnabled(true);
           router.push("/ready");
         }
@@ -50,7 +52,8 @@ export default function BiometricPage() {
           setBiometricEnabled(false);
           router.push("/ready");
         },
-        onError: () => {
+        onError: (err: Error) => {
+          toast.warning(err.message ?? "Registration skipped.");
           setBiometricEnabled(false);
           router.push("/ready");
         }
@@ -62,20 +65,7 @@ export default function BiometricPage() {
   return (
     <div className="flex h-dvh flex-col bg-linear-to-br from-bg via-bg to-secondary/10 px-6 pb-8 pt-5 justify-between max-w-sm mx-auto overflow-y-auto">
       
-      {/* HEADER SECTION */}
-      <div className="flex items-center justify-between w-full relative shrink-0">
-        <button 
-          type="button"
-          onClick={() => router.back()}
-          className="text-xl font-bold p-2 text-ink/70 hover:text-ink transition-colors z-30"
-        >
-          ←
-        </button>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-xl font-black tracking-tight text-ink">Paadi</span>
-        </div>
-        <div className="w-10" />
-      </div>
+      
 
       {/* CORE FRAME DISPLAY */}
       <div className="flex-1 flex flex-col items-center justify-center w-full my-auto max-y-[400px]">

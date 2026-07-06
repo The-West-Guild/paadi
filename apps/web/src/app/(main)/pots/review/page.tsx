@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCreatePotStore } from "@/features/create-pot/store";
 import { useCreatePot } from "@/features/create-pot/hooks";
+import { toast } from "@/features/toast/store";
 import { Loader2, ShieldCheck, Calendar, Lock } from "lucide-react";
 import { DeadlinePicker } from "@/components/ui/deadline-picker";
 
@@ -14,13 +15,11 @@ export default function ReviewPotPage() {
 
   const [completionRule, setCompletionRule] = useState<"progressive" | "all_or_nothing">("progressive");
   const [deadlineDate, setDeadlineDate] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+
 
   const isPending = createPotMutation.isPending;
 
   function handleSubmit() {
-    setErrorMsg("");
-
     // Prepare CreatePotInput
     const input: any = {
       title: store.title,
@@ -46,11 +45,11 @@ export default function ReviewPotPage() {
       // Convert user date input to ISO 8601 string
       const localDate = new Date(deadlineDate);
       if (isNaN(localDate.getTime())) {
-        setErrorMsg("Invalid deadline date.");
+        toast.error("Invalid deadline date.");
         return;
       }
       if (localDate.getTime() <= Date.now()) {
-        setErrorMsg("Deadline must be in the future.");
+        toast.error("Deadline must be in the future.");
         return;
       }
       input.deadlineAt = localDate.toISOString();
@@ -74,13 +73,14 @@ export default function ReviewPotPage() {
       { input, idempotencyKey },
       {
         onSuccess: (potDetail) => {
+          toast.success("Pot created successfully!");
           // Reset store state
           store.reset();
           // Navigate to detail screen
           router.push(`/pots/${potDetail.id}`);
         },
         onError: (err: any) => {
-          setErrorMsg(err.message ?? "Failed to create pot. Check your details and try again.");
+          toast.error(err.message ?? "Failed to create pot. Check your details and try again.");
         },
       }
     );
@@ -96,11 +96,7 @@ export default function ReviewPotPage() {
         </span>
       </div>
 
-      {errorMsg && (
-        <div className="mt-4 bg-danger/10 border border-danger/20 rounded-xl p-3 text-xs font-bold text-danger text-center">
-          ❌ {errorMsg}
-        </div>
-      )}
+
 
       {/* SUMMARY CARD */}
       <div className="mt-5 flex flex-col gap-4 bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">

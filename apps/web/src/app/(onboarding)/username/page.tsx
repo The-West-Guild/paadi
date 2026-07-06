@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUsernameAvailable, useSignupUsername } from "@/features/onboarding/hooks";
+import { toast } from "@/features/toast/store";
 import { ApiError } from "@/lib/api/error";
 import { Loader2 } from "lucide-react";
 
@@ -36,6 +37,9 @@ export default function UsernamePage() {
  
     signupUsername.mutate(username, {
       onSuccess: () => router.push("/password"),
+      onError: (err: Error) => {
+        toast.error(err.message ?? "Failed to claim handle.");
+      }
     });
   }
  
@@ -45,20 +49,7 @@ export default function UsernamePage() {
   return (
     <div className="flex h-dvh flex-col bg-linear-to-br from-bg via-bg to-secondary/10 px-6 pb-6 pt-5 justify-between max-w-sm mx-auto overflow-y-auto">
       
-      {/* HEADER SECTION */}
-      <div className="flex items-center justify-between w-full relative shrink-0">
-        <button 
-          type="button"
-          onClick={() => router.back()}
-          className="text-xl font-bold p-2 text-ink/70 hover:text-ink transition-colors z-30"
-        >
-          ←
-        </button>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-xl font-black tracking-tight text-ink">Paadi</span>
-        </div>
-        <div className="w-10" />
-      </div>
+      
  
       {/* MAIN FORM BODY */}
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col items-start justify-start pt-6 w-full">
