@@ -25,6 +25,7 @@ import {
 } from "@paadi/contracts";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { Scopes } from "../../common/decorators/scopes.decorator";
+import { Audited } from "../../infra/audit/audited.decorator";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { ApiZod, ApiZodResponse } from "../../common/swagger/zod-api";
 import type { AccessClaims } from "../../infra/auth/token.service";
@@ -38,6 +39,7 @@ export class PotsController {
 
   @Post("")
   @Scopes("pots:write")
+  @Audited("pots.created")
   @ApiOperation({ summary: "Create a pot", description: "Opens a new bill-split pot. Requires an idempotency-key header." })
   @ApiZod({ body: createPotSchema, response: potDetailSchema, status: 201 })
   create(

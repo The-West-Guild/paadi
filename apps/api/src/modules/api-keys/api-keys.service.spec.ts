@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, NotFoundException } from "@nes
 import { ConfigService } from "@nestjs/config";
 import { apiKeyCreatedSchema, apiKeysResponseSchema } from "@paadi/contracts";
 import { ApiKey } from "@paadi/db";
+import { AuditService } from "../../infra/audit/audit.service";
 import { ApiKeyAuthService } from "../../infra/auth/api-key-auth.service";
 import type { AccessClaims } from "../../infra/auth/token.service";
 import { ApiKeyRepository } from "../../infra/persistence/api-key.repository";
@@ -57,17 +58,24 @@ function build(options: BuildOptions = {}) {
   } as unknown as ApiKeyRepository;
 
   const auth = { evict: jest.fn(async () => undefined) } as unknown as ApiKeyAuthService;
+  const audit = { recordSafe: jest.fn(async () => undefined) } as unknown as AuditService;
   const config = { get: jest.fn(() => undefined) } as unknown as ConfigService;
-  const service = new ApiKeysService(repo, auth, config);
-  return { service, repo, auth };
+  const service = new ApiKeysService(repo, auth, audit, config);
+  return { service, repo, auth, audit };
 }
 
 describe("ApiKeysService.mint", () => {
   it("returns the plaintext key once and a DTO that validates without hash fields", async () => {
-    const { service } = build();
+    const { service, audit } = build();
     const created = await service.mint(sessionClaims(), { name: "agent key", scopes: ["pots:read"] });
     expect(apiKeyCreatedSchema.parse(created).key).toBe(SECRET);
     expect(created).not.toHaveProperty("keyHash");
+    expect(audit.recordSafe).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: "apikey.minted" })
+    );
+    // The audit payload must never contain the plaintext key.
+    const payload = (audit.recordSafe as jest.Mock).mock.calls[0][0];
+    expect(JSON.stringify(payload)).not.toContain(SECRET);
   });
 
   it("rejects api-key principals with 403 (a key must not mint keys)", async () => {
@@ -109,11 +117,14 @@ describe("ApiKeysService.list", () => {
 });
 
 describe("ApiKeysService.revoke", () => {
-  it("revokes an owned key and evicts its cached principal", async () => {
-    const { service, auth } = build({ rows: [makeKeyRow()] });
+  it("revokes an owned key, evicts its cached principal, and audits", async () => {
+    const { service, auth, audit } = build({ rows: [makeKeyRow()] });
     const revoked = await service.revoke(sessionClaims(), "key-1");
     expect(revoked.revokedAt).not.toBeNull();
     expect(auth.evict).toHaveBeenCalledWith("hash-1");
+    expect(audit.recordSafe).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: "apikey.revoked" })
+    );
   });
 
   it("404s on another user's key (no IDOR)", async () => {

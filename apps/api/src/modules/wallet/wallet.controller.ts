@@ -20,6 +20,7 @@ import {
 } from "@paadi/contracts";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { Scopes } from "../../common/decorators/scopes.decorator";
+import { Audited } from "../../infra/audit/audited.decorator";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { ApiZod, ApiZodResponse } from "../../common/swagger/zod-api";
 import type { AccessClaims } from "../../infra/auth/token.service";
@@ -80,6 +81,7 @@ export class WalletController {
 
   @Post("me/wallet/pay")
   @Scopes("wallet:pay")
+  @Audited("wallet.pay")
   @ApiOperation({
     summary: "Pay a split from wallet",
     description: "Settles a pot split directly from the wallet balance. Requires an idempotency-key header and the caller's PIN."
@@ -106,6 +108,7 @@ export class WalletController {
 
   @Post("me/wallet/withdraw")
   @Scopes("wallet:withdraw")
+  @Audited("wallet.withdraw")
   @ApiOperation({
     summary: "Withdraw from wallet",
     description: "Moves value out of the wallet to a bank account. Requires an idempotency-key header; subject to KYC tier limits."

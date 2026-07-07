@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { ConfigService } from "@nestjs/config";
 import type { ApiKeyCreatedDto, ApiKeyCurrentDto, ApiKeyDto, ApiKeysResponse, MintApiKeyInput } from "@paadi/contracts";
 import { ApiKey } from "@paadi/db";
+import { AuditService } from "../../infra/audit/audit.service";
 import { ApiKeyAuthService } from "../../infra/auth/api-key-auth.service";
 import type { AccessClaims } from "../../infra/auth/token.service";
 import { ApiKeyRepository } from "../../infra/persistence/api-key.repository";
@@ -13,6 +14,7 @@ export class ApiKeysService {
   constructor(
     private readonly keys: ApiKeyRepository,
     private readonly apiKeyAuth: ApiKeyAuthService,
+    private readonly audit: AuditService,
     private readonly config: ConfigService
   ) {}
 
@@ -31,6 +33,12 @@ export class ApiKeysService {
       scopes: input.scopes,
       expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined
     });
+    await this.audit.recordSafe({
+      eventType: "apikey.minted",
+      actorId: claims.sub,
+      targetId: key.id,
+      payload: { keyId: key.id, prefix: key.prefix, scopes: key.scopes }
+    });
     // The plaintext key is returned exactly once; only its hash is stored.
     return { ...this.toDto(key), key: secret };
   }
@@ -47,6 +55,12 @@ export class ApiKeysService {
     const revoked = await this.keys.revoke(key.id);
     // Evict the cached principal so revocation is immediate, not TTL-delayed.
     await this.apiKeyAuth.evict(key.keyHash);
+    await this.audit.recordSafe({
+      eventType: "apikey.revoked",
+      actorId: claims.sub,
+      targetId: key.id,
+      payload: { keyId: key.id, prefix: key.prefix }
+    });
     return this.toDto(revoked);
   }
 
