@@ -47,12 +47,11 @@ export default function OnboardingLayout({
             <button
               type="button"
               onClick={() => router.back()}
-              className="h-11 w-11 flex items-center justify-center border border-ink
-              /10 rounded-xl bg-white text-ink
+              className="h-11 w-11 flex items-center justify-center border border-amber-500 rounded-xl bg-white text-ink
                shadow-xs active:scale-95 transition-all"
               aria-label="Go back"
             >
-              <ArrowLeft className="h-5 w-5 stroke-[2.5]" />
+              <ArrowLeft className="h-5 w-5 stroke-[2.5] text-amber-500" />
             </button>
           ) : (
             <div className="w-11 h-11" />
