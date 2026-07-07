@@ -1,5 +1,9 @@
 import {
   ActivityFeedResponse,
+  ApiKeyCreatedDto,
+  ApiKeyCurrentDto,
+  ApiKeyDto,
+  ApiKeysResponse,
   AuthSession,
   BanksResponse,
   BillerCustomer,
@@ -23,7 +27,9 @@ import {
   LoginInput,
   LoginResponse,
   MeResponse,
+  MintApiKeyInput,
   NotificationPrefsResponse,
+  PayFromWalletInput,
   PayView,
   PayoutAccountsResponse,
   PayoutLookupInput,
@@ -51,6 +57,8 @@ import {
   VirtualAccountResponse,
   WalletBalanceResponse,
   WalletStatementResponse,
+  WithdrawInput,
+  WithdrawalView,
 } from "@paadi/contracts";
 
 export interface PaadiClientOptions {
@@ -198,6 +206,72 @@ export class PaadiClient {
       ) as Record<string, string>
     ).toString();
     return this.request(`/me/wallet/transactions${qs ? `?${qs}` : ""}`);
+  }
+
+  getStatement(query?: {
+    cursor?: string;
+    limit?: number;
+    direction?: "credit" | "debit";
+    from?: string;
+    to?: string;
+  }): Promise<WalletStatementResponse> {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(query ?? {}).filter(([, v]) => v !== undefined)
+      ) as Record<string, string>
+    ).toString();
+    return this.request(`/me/statement${qs ? `?${qs}` : ""}`);
+  }
+
+  /** Settles a pot split from the wallet balance. Requires an idempotency key — reuse the same key to safely retry. */
+  payFromWallet(
+    input: PayFromWalletInput,
+    idempotencyKey: string
+  ): Promise<PotDetail> {
+    return this.request("/me/wallet/pay", {
+      method: "POST",
+      body: JSON.stringify(input),
+      headers: { "idempotency-key": idempotencyKey },
+    });
+  }
+
+  /** Withdraws wallet funds to a bank account. Requires an idempotency key — reuse the same key to safely retry. */
+  withdraw(
+    input: WithdrawInput,
+    idempotencyKey: string
+  ): Promise<WithdrawalView> {
+    return this.request("/me/wallet/withdraw", {
+      method: "POST",
+      body: JSON.stringify(input),
+      headers: { "idempotency-key": idempotencyKey },
+    });
+  }
+
+  getWithdrawal(id: string): Promise<WithdrawalView> {
+    return this.request(`/me/wallet/withdrawals/${id}`);
+  }
+
+  // ─── api keys ─────────────────────────────────────────────────────────────
+
+  /** Mints a new API key. Session auth only — the plaintext key is returned once and never again. */
+  mintApiKey(input: MintApiKeyInput): Promise<ApiKeyCreatedDto> {
+    return this.request("/me/api-keys", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  }
+
+  listApiKeys(): Promise<ApiKeysResponse> {
+    return this.request("/me/api-keys");
+  }
+
+  revokeApiKey(id: string): Promise<ApiKeyDto> {
+    return this.request(`/me/api-keys/${id}`, { method: "DELETE" });
+  }
+
+  /** Returns the identity and scopes of the API key making this call. API-key auth only. */
+  getCurrentApiKey(): Promise<ApiKeyCurrentDto> {
+    return this.request("/me/api-keys/current");
   }
 
   // ─── virtual account ──────────────────────────────────────────────────────

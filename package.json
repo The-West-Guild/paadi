@@ -20,5 +20,10 @@
     "prettier": "^3.4.2",
     "turbo": "^2.3.3",
     "typescript": "catalog:"
+  },
+  "pnpm": {
+    "overrides": {
+      "@modelcontextprotocol/sdk>zod-to-json-schema": "3.24.6"
+    }
   }
 }

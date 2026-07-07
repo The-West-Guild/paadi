@@ -1,7 +1,10 @@
 import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtGuard } from "./common/guards/jwt.guard";
+import { RateLimitGuard } from "./common/guards/rate-limit.guard";
+import { ScopesGuard } from "./common/guards/scopes.guard";
 import { CoreModule } from "./core/core.module";
+import { AuditModule } from "./infra/audit/audit.module";
 import { CryptoModule } from "./common/crypto/crypto.module";
 import { RedisModule } from "./infra/redis/redis.module";
 import { PrismaModule } from "./infra/persistence/prisma.module";
@@ -32,11 +35,13 @@ import { VirtualAccountsModule } from "./modules/virtual-accounts/virtual-accoun
 import { ReconciliationModule } from "./modules/reconciliation/reconciliation.module";
 import { WalletModule } from "./modules/wallet/wallet.module";
 import { ActivityModule } from "./modules/activity/activity.module";
+import { ApiKeysModule } from "./modules/api-keys/api-keys.module";
 import { DeveloperModule } from "./modules/developer/developer.module";
 
 @Module({
   imports: [
     CoreModule,
+    AuditModule,
     CryptoModule,
     RedisModule,
     PrismaModule,
@@ -67,8 +72,15 @@ import { DeveloperModule } from "./modules/developer/developer.module";
     ReconciliationModule,
     WalletModule,
     ActivityModule,
+    ApiKeysModule,
     DeveloperModule
   ],
-  providers: [{ provide: APP_GUARD, useClass: JwtGuard }]
+  providers: [
+    // Same-module APP_GUARD order is deterministic:
+    // authenticate → rate-limit (keyed on principal) → authorize scopes.
+    { provide: APP_GUARD, useClass: JwtGuard },
+    { provide: APP_GUARD, useClass: RateLimitGuard },
+    { provide: APP_GUARD, useClass: ScopesGuard }
+  ]
 })
 export class AppModule {}

@@ -1,5 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { ApiKeyAuthService } from "../../infra/auth/api-key-auth.service";
 import { TokenService } from "../../infra/auth/token.service";
 import { IS_PUBLIC } from "../decorators/public.decorator";
 
@@ -7,7 +8,8 @@ import { IS_PUBLIC } from "../decorators/public.decorator";
 export class JwtGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly tokens: TokenService
+    private readonly tokens: TokenService,
+    private readonly apiKeys: ApiKeyAuthService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -23,7 +25,9 @@ export class JwtGuard implements CanActivate {
       throw new UnauthorizedException("missing bearer token");
     }
 
-    request.user = await this.tokens.verifyAccess(token);
+    request.user = token.startsWith("pk_")
+      ? await this.apiKeys.verify(token)
+      : await this.tokens.verifyAccess(token);
     return true;
   }
 }

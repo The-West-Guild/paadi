@@ -19,6 +19,7 @@ import {
 } from "@paadi/contracts";
 import { PrismaService } from "@paadi/db";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { Scopes } from "../../common/decorators/scopes.decorator";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { ApiZodResponse } from "../../common/swagger/zod-api";
 import type { AccessClaims } from "../../infra/auth/token.service";
@@ -34,6 +35,7 @@ export class ActivityController {
   ) {}
 
   @Get("me/activity")
+  @Scopes("activity:read")
   @ApiZodResponse(200, activityFeedResponseSchema)
   globalFeed(
     @CurrentUser() claims: AccessClaims,
@@ -43,6 +45,7 @@ export class ActivityController {
   }
 
   @Get("pots/:id/activity")
+  @Scopes("activity:read")
   @ApiZodResponse(200, potActivityResponseSchema)
   async potFeed(
     @CurrentUser() claims: AccessClaims,

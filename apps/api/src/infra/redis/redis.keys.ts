@@ -5,5 +5,8 @@ export const redisKeys = {
   signup: (token: string): string => `signup:${token}`,
   sessionDenylist: (sid: string): string => `denylist:session:${sid}`,
   usernameTombstone: (normalized: string): string => `username:tombstone:${normalized}`,
-  usernameRename: (userId: string): string => `username:rename:${userId}`
+  usernameRename: (userId: string): string => `username:rename:${userId}`,
+  apiKeyPrincipal: (keyHash: string): string => `apikey:principal:${keyHash}`,
+  apiKeyTouch: (keyId: string): string => `apikey:touch:${keyId}`,
+  rateLimit: (tracker: string, window: number): string => `ratelimit:${tracker}:${window}`
 };

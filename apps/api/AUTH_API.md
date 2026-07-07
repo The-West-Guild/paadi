@@ -16,12 +16,13 @@ The API speaks JSON; always send `Content-Type: application/json`.
 
 ## Auth model
 
-Four access modes are used across the surface:
+Five access modes are used across the surface:
 
 | Mode | How it travels | Used by |
 | --- | --- | --- |
 | **none** (`@Public`) | No credentials | signup steps, login, refresh, forgot/reset password, public profile, Google sign-in, webhooks |
 | **Bearer** (access token) | `Authorization: Bearer <accessToken>` header | every `/me/*`, `/auth/logout*`, `/auth/pin*`, `/transfers/*`, Google link |
+| **Bearer** (API key) | `Authorization: Bearer pk_(live\|test)_…` header | machine/agent access to scope-allowlisted routes only (see [API keys](#api-keys)) |
 | **onboarding-token** | `onboardingToken` string in the JSON **body** (not a header) | `/auth/signup/{verify-phone,profile,username,password,pin}` |
 | **signature** | Provider HMAC header over the raw body | `/webhooks/dojah`, `/webhooks/nomba` |
 
@@ -211,6 +212,39 @@ Tag `webhooks`. `@Public` at the route guard level, gated by provider signatures
 | --- | --- | --- | --- | --- | --- | --- |
 | POST | `/webhooks/dojah` | signature (`x-dojah-signature` HMAC-SHA256 hex over raw body) | provider payload `{ reference?, entity?.reference?, status? }` | `{ received: true }` | 401 missing/invalid signature, missing raw body | _n/a_ |
 | POST | `/webhooks/nomba` | signature (pass-through stub today) | provider payload (opaque) | `{ received: true }` | _n/a_ | _n/a_ |
+
+## api-keys
+
+Tag `api-keys`. Scoped machine credentials for agents and integrations (e.g. the Paadi MCP server). A key **acts as its owner** (`sub` = owner user id) but only on routes explicitly allowlisted with a scope — everything else (PIN, KYC, devices, payout accounts, sessions, key management itself) is session-only and returns `403 "api key not permitted on this endpoint"`.
+
+**⚠️ The plaintext key is returned once at mint time and never again.** Only its sha256 hash is stored. Store it like a password.
+
+| Method | Path | Auth | Request body | Success response | Errors | api-client method |
+| --- | --- | --- | --- | --- | --- | --- |
+| POST | `/me/api-keys` | Bearer (session only) | `{ name: string(1-64), scopes: Scope[], expiresAt?: ISO datetime }` | `201` `ApiKeyCreatedDto` incl. one-time `key` | 400 validation/limit/past expiry; 403 called with an API key | `mintApiKey` |
+| GET | `/me/api-keys` | Bearer (session only) | _none_ | `{ keys: ApiKeyDto[] }` (prefix + metadata, never the secret) | 403 called with an API key | `listApiKeys` |
+| GET | `/me/api-keys/current` | Bearer (**API key only**) | _none_ | `{ id, name, prefix, mode: "live"\|"test", scopes }` | 400 called with a session token | `getCurrentApiKey` |
+| DELETE | `/me/api-keys/:id` | Bearer (session only) | _none_ | revoked `ApiKeyDto` | 404 not found / not owned; 403 called with an API key | `revokeApiKey` |
+
+### Scope vocabulary
+
+| Scope | Grants |
+| --- | --- |
+| `pots:read` | `GET /pots`, `GET /pots/:id`, pot settlement + receipts reads |
+| `pots:write` | `POST /pots` (idempotency-key header required), update/delete/cancel, settlement retry |
+| `wallet:read` | wallet balance, transactions, statement, withdrawal status |
+| `wallet:pay` | `POST /me/wallet/pay` (also requires PIN + idempotency-key) |
+| `wallet:withdraw` | `POST /me/wallet/withdraw` (also requires PIN + idempotency-key) |
+| `bills:read` | biller providers/plans/customer lookups |
+| `profile:read` | `GET /me` |
+| `activity:read` | `GET /me/activity`, `GET /pots/:id/activity` |
+| `webhooks:manage` | `/developer/webhooks*` registration and delivery reads |
+
+Key lifecycle: keys are minted `pk_test_…` in non-production and `pk_live_…` in production; revocation takes effect immediately; optional `expiresAt` auto-disables a key. Money movement performed with an API key is written to a hash-chained audit trail.
+
+### Rate limiting
+
+All responses carry `X-RateLimit-Limit` / `X-RateLimit-Remaining` / `X-RateLimit-Reset` (seconds). Limits are per principal per 60s window: **120** for session users, **60** per API key, **20** per IP for public routes. Exceeding the limit returns `429 { statusCode: 429, message: "rate limit exceeded" }` with a `Retry-After` header.
 
 ---
 

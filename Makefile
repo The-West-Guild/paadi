@@ -1,7 +1,7 @@
 PNPM ?= pnpm
 
 .DEFAULT_GOAL := help
-.PHONY: help start setup install env packages infra infra-down db db-generate db-push db-migrate db-studio dev api worker web mobile build check lint verify up up-logs down clean
+.PHONY: help start setup install env packages infra infra-down db db-generate db-push db-migrate db-studio dev api worker web mobile mcp build check lint verify up up-logs down clean
 
 help:
 	@echo "Paadi — common commands"
@@ -17,6 +17,7 @@ help:
 	@echo "  make worker       Run only the worker (watch)"
 	@echo "  make web          Run the Next.js web app"
 	@echo "  make mobile       Run the Expo mobile app"
+	@echo "  make mcp          Build the MCP server and open the Inspector"
 	@echo "  make verify       Smoke-test the running API"
 	@echo "  make down         Stop the Docker services"
 	@echo "  make clean        Stop Docker services and remove build output"
@@ -38,6 +39,7 @@ env:
 	@test -f apps/api/.env || cp apps/api/.env.example apps/api/.env
 	@test -f apps/web/.env || cp apps/web/.env.example apps/web/.env
 	@test -f apps/mobile/.env || cp apps/mobile/.env.example apps/mobile/.env
+	@test -f apps/mcp/.env || cp apps/mcp/.env.example apps/mcp/.env
 	@test -f packages/db/.env || cp packages/db/.env.example packages/db/.env
 
 infra:
@@ -76,6 +78,10 @@ web:
 
 mobile:
 	$(PNPM) --filter @paadi/mobile dev
+
+mcp:
+	$(PNPM) --filter @paadi/mcp build
+	$(PNPM) --filter @paadi/mcp inspect
 
 build:
 	$(PNPM) build

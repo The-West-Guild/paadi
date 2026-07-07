@@ -16,6 +16,7 @@ import {
   type WebhookEndpointsResponse
 } from "@paadi/contracts";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { Scopes } from "../../common/decorators/scopes.decorator";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { ApiZod, ApiZodResponse } from "../../common/swagger/zod-api";
 import type { AccessClaims } from "../../infra/auth/token.service";
@@ -23,6 +24,7 @@ import { DeveloperService } from "./developer.service";
 
 @ApiTags("developer")
 @ApiBearerAuth()
+@Scopes("webhooks:manage")
 @Controller("developer/webhooks")
 export class DeveloperController {
   constructor(private readonly developer: DeveloperService) {}

@@ -67,4 +67,17 @@ export const configuration = () => ({
       .map((id) => id.trim())
       .filter(Boolean),
   },
+  apiKeys: {
+    cacheTtlSeconds: Number(process.env.API_KEY_CACHE_TTL_SECONDS ?? 60),
+    maxPerUser: Number(process.env.API_KEYS_MAX_PER_USER ?? 10),
+  },
+  rateLimit: {
+    enabled: (process.env.RATE_LIMIT_ENABLED ?? "true") !== "false",
+    windowSeconds: Number(process.env.RATE_LIMIT_WINDOW_SECONDS ?? 60),
+    authenticatedLimit: Number(
+      process.env.RATE_LIMIT_AUTHENTICATED_LIMIT ?? 120,
+    ),
+    apiKeyLimit: Number(process.env.RATE_LIMIT_API_KEY_LIMIT ?? 60),
+    publicLimit: Number(process.env.RATE_LIMIT_PUBLIC_LIMIT ?? 20),
+  },
 });

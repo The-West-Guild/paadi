@@ -31,8 +31,13 @@ interface IssuedTokens {
 
 export interface AccessClaims {
   sub: string;
+  /** Session id for JWT principals; `apikey:<keyId>` for API-key principals. */
   sid: string;
   tier: string;
+  via: "session" | "apikey";
+  /** Present only for API-key principals; sessions have implicit full access. */
+  scopes?: string[];
+  apiKeyId?: string;
 }
 
 @Injectable()
@@ -109,11 +114,18 @@ export class TokenService {
   }
 
   async verifyAccess(token: string): Promise<AccessClaims> {
-    const claims = await this.jwt.verifyAsync<AccessClaims>(token, { secret: this.accessSecret() });
+    let claims: AccessClaims;
+    try {
+      claims = await this.jwt.verifyAsync<AccessClaims>(token, { secret: this.accessSecret() });
+    } catch {
+      // jsonwebtoken throws raw JsonWebTokenError/TokenExpiredError — without
+      // this catch they surface as 500 through the global filter.
+      throw new UnauthorizedException("invalid access token");
+    }
     if (await this.redis.get(redisKeys.sessionDenylist(claims.sid))) {
       throw new UnauthorizedException("session revoked");
     }
-    return { sub: claims.sub, sid: claims.sid, tier: claims.tier };
+    return { sub: claims.sub, sid: claims.sid, tier: claims.tier, via: "session" };
   }
 
   async revoke(sessionId: string): Promise<void> {

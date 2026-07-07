@@ -65,7 +65,7 @@ jobs:
         run: pnpm db:push
 
       - name: Lint, type-check, test, build
-        run: pnpm exec turbo run lint check-types test build --filter=@paadi/api...
+        run: pnpm exec turbo run lint check-types test build --filter=@paadi/api... --filter=@paadi/mcp...
 
       - name: Export OpenAPI spec
         run: pnpm --filter @paadi/api run export-openapi

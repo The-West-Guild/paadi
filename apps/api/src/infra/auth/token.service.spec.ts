@@ -190,3 +190,50 @@ describe("TokenService", () => {
     expect(child.revokedAt).toBeInstanceOf(Date);
   });
 });
+
+describe("TokenService.verifyAccess", () => {
+  it("returns a session principal for a valid token", async () => {
+    const { service } = buildService();
+    const issued = await service.issueSession({ id: "user-1", tier: "TIER_1" });
+
+    const claims = await service.verifyAccess(issued.accessToken);
+
+    expect(claims.sub).toBe("user-1");
+    expect(claims.tier).toBe("TIER_1");
+    expect(claims.via).toBe("session");
+  });
+
+  it("maps a malformed token to 401 instead of leaking a 500", async () => {
+    const { service } = buildService();
+    await expect(service.verifyAccess("garbage.jwt.here")).rejects.toBeInstanceOf(UnauthorizedException);
+    await expect(service.verifyAccess("notajwt")).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("maps a wrong-signature token to 401", async () => {
+    const { service } = buildService();
+    const foreign = await new JwtService({}).signAsync(
+      { sub: "user-1", sid: "sid-1", tier: "TIER_1" },
+      { secret: "some-other-secret", expiresIn: "15m" }
+    );
+    await expect(service.verifyAccess(foreign)).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("maps an expired token to 401", async () => {
+    const { service, jwt } = buildService();
+    const expired = await jwt.signAsync(
+      { sub: "user-1", sid: "sid-1", tier: "TIER_1" },
+      { secret: "test-access-secret", expiresIn: "0s" }
+    );
+    await expect(service.verifyAccess(expired)).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("rejects a denylisted session with 401", async () => {
+    const { service, sessions } = buildService();
+    const issued = await service.issueSession({ id: "user-1", tier: "TIER_1" });
+    const session = [...sessions.rows.values()][0];
+
+    await service.revoke(session.id);
+
+    await expect(service.verifyAccess(issued.accessToken)).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+});

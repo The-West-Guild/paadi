@@ -10,6 +10,10 @@ export const paySplitFromWalletSchema = z.object({
   pin: z.string().regex(/^\d{4}$/)
 });
 
+export const payFromWalletBodySchema = paySplitFromWalletSchema.merge(
+  paySplitFromWalletParamsSchema
+);
+
 export const withdrawSchema = z.object({
   amountKobo: z.number().int().positive(),
   payoutAccountId: z.string().uuid().optional(),
@@ -56,6 +60,7 @@ export type PaySplitFromWalletParams = z.infer<
   typeof paySplitFromWalletParamsSchema
 >;
 export type PaySplitFromWalletInput = z.infer<typeof paySplitFromWalletSchema>;
+export type PayFromWalletInput = z.infer<typeof payFromWalletBodySchema>;
 export type WithdrawInput = z.infer<typeof withdrawSchema>;
 export type WithdrawalParams = z.infer<typeof withdrawalParamsSchema>;
 export type WithdrawalDestination = z.infer<typeof withdrawalDestinationSchema>;

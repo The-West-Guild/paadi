@@ -11,12 +11,14 @@ import {
   type CableProductsQuery
 } from "@paadi/contracts";
 import { BillerCategory } from "@paadi/domain";
+import { Scopes } from "../../common/decorators/scopes.decorator";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { ApiZodResponse } from "../../common/swagger/zod-api";
 import { BillerRegistry } from "../../integrations/nomba/biller.registry";
 
 @ApiTags("bills")
 @ApiBearerAuth()
+@Scopes("bills:read")
 @Controller("bills")
 export class BillsController {
   constructor(private readonly registry: BillerRegistry) {}

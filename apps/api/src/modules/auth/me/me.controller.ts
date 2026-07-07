@@ -9,6 +9,7 @@ import {
   type UpdateProfileInput
 } from "@paadi/contracts";
 import { CurrentUser } from "../../../common/decorators/current-user.decorator";
+import { Scopes } from "../../../common/decorators/scopes.decorator";
 import { Public } from "../../../common/decorators/public.decorator";
 import { ZodValidationPipe } from "../../../common/pipes/zod-validation.pipe";
 import { ApiZod, ApiZodResponse } from "../../../common/swagger/zod-api";
@@ -22,6 +23,7 @@ export class MeController {
   constructor(private readonly profile: ProfileService) {}
 
   @Get("me")
+  @Scopes("profile:read")
   @ApiZodResponse(200, meResponseSchema)
   me(@CurrentUser() claims: AccessClaims) {
     return this.profile.getMe(claims.sub);

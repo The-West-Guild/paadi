@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Get, Headers, Param, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
 import {
-  paySplitFromWalletSchema,
+  payFromWalletBodySchema,
   potDetailSchema,
   statementQuerySchema,
   walletBalanceResponseSchema,
@@ -9,6 +9,7 @@ import {
   withdrawalParamsSchema,
   withdrawalViewSchema,
   withdrawSchema,
+  type PayFromWalletInput,
   type PotDetail,
   type StatementQuery,
   type WalletBalanceResponse,
@@ -17,22 +18,15 @@ import {
   type WithdrawalView,
   type WithdrawInput
 } from "@paadi/contracts";
-import { z } from "zod";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { Scopes } from "../../common/decorators/scopes.decorator";
+import { Audited } from "../../infra/audit/audited.decorator";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { ApiZod, ApiZodResponse } from "../../common/swagger/zod-api";
 import type { AccessClaims } from "../../infra/auth/token.service";
 import { WalletSpendService } from "./wallet-spend.service";
 import { WalletStatementService } from "./wallet-statement.service";
 import { WithdrawService } from "./withdrawal.service";
-
-const payFromWalletBodySchema = paySplitFromWalletSchema.extend({
-  potId: z.string().uuid(),
-  splitId: z.string().uuid(),
-  pin: z.string().regex(/^\d{4}$/)
-});
-
-type PayFromWalletBody = z.infer<typeof payFromWalletBodySchema>;
 
 @ApiTags("wallet")
 @ApiBearerAuth()
@@ -45,6 +39,7 @@ export class WalletController {
   ) {}
 
   @Get("me/wallet")
+  @Scopes("wallet:read")
   @ApiOperation({
     summary: "Get wallet balance",
     description: "Returns the caller's reconciled wallet balance in kobo, derived from the double-entry ledger."
@@ -55,6 +50,7 @@ export class WalletController {
   }
 
   @Get("me/wallet/transactions")
+  @Scopes("wallet:read")
   @ApiTags("statements")
   @ApiOperation({
     summary: "List wallet transactions",
@@ -69,6 +65,7 @@ export class WalletController {
   }
 
   @Get("me/statement")
+  @Scopes("wallet:read")
   @ApiTags("statements")
   @ApiOperation({
     summary: "Get customer statement",
@@ -83,6 +80,8 @@ export class WalletController {
   }
 
   @Post("me/wallet/pay")
+  @Scopes("wallet:pay")
+  @Audited("wallet.pay")
   @ApiOperation({
     summary: "Pay a split from wallet",
     description: "Settles a pot split directly from the wallet balance. Requires an idempotency-key header and the caller's PIN."
@@ -91,7 +90,7 @@ export class WalletController {
   async pay(
     @CurrentUser() claims: AccessClaims,
     @Headers("idempotency-key") idempotencyKey: string | undefined,
-    @Body(new ZodValidationPipe(payFromWalletBodySchema)) body: PayFromWalletBody
+    @Body(new ZodValidationPipe(payFromWalletBodySchema)) body: PayFromWalletInput
   ): Promise<PotDetail> {
     if (!idempotencyKey) {
       throw new BadRequestException("idempotency-key header required");
@@ -108,6 +107,8 @@ export class WalletController {
   }
 
   @Post("me/wallet/withdraw")
+  @Scopes("wallet:withdraw")
+  @Audited("wallet.withdraw")
   @ApiOperation({
     summary: "Withdraw from wallet",
     description: "Moves value out of the wallet to a bank account. Requires an idempotency-key header; subject to KYC tier limits."
@@ -125,6 +126,7 @@ export class WalletController {
   }
 
   @Get("me/wallet/withdrawals/:id")
+  @Scopes("wallet:read")
   @ApiOperation({
     summary: "Get withdrawal",
     description: "Returns the status and detail of a single withdrawal the caller initiated."

@@ -24,6 +24,8 @@ import {
   type UpdatePotInput
 } from "@paadi/contracts";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { Scopes } from "../../common/decorators/scopes.decorator";
+import { Audited } from "../../infra/audit/audited.decorator";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { ApiZod, ApiZodResponse } from "../../common/swagger/zod-api";
 import type { AccessClaims } from "../../infra/auth/token.service";
@@ -36,6 +38,8 @@ export class PotsController {
   constructor(private readonly pots: PotsService) {}
 
   @Post("")
+  @Scopes("pots:write")
+  @Audited("pots.created")
   @ApiOperation({ summary: "Create a pot", description: "Opens a new bill-split pot. Requires an idempotency-key header." })
   @ApiZod({ body: createPotSchema, response: potDetailSchema, status: 201 })
   create(
@@ -50,6 +54,7 @@ export class PotsController {
   }
 
   @Get("")
+  @Scopes("pots:read")
   @ApiOperation({ summary: "List pots", description: "Returns the caller's pots, filterable and paginated by query." })
   @ApiZodResponse(200, listPotsResponseSchema)
   list(
@@ -60,6 +65,7 @@ export class PotsController {
   }
 
   @Get(":id")
+  @Scopes("pots:read")
   @ApiOperation({ summary: "Get a pot", description: "Returns full detail for a pot the caller owns or participates in." })
   @ApiZodResponse(200, potDetailSchema)
   findOne(
@@ -70,6 +76,7 @@ export class PotsController {
   }
 
   @Patch(":id")
+  @Scopes("pots:write")
   @ApiOperation({ summary: "Update a pot", description: "Edits mutable fields on a pot the caller owns." })
   @ApiZod({ body: updatePotSchema, response: potDetailSchema, status: 200 })
   update(
@@ -81,6 +88,7 @@ export class PotsController {
   }
 
   @Delete(":id")
+  @Scopes("pots:write")
   @ApiOperation({ summary: "Delete a pot", description: "Removes a draft pot the caller owns." })
   remove(
     @CurrentUser() claims: AccessClaims,
@@ -90,6 +98,7 @@ export class PotsController {
   }
 
   @Post(":id/cancel")
+  @Scopes("pots:write")
   @ApiOperation({ summary: "Cancel a pot", description: "Cancels an open pot and stops further contributions." })
   @ApiZodResponse(200, potDetailSchema)
   cancel(

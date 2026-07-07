@@ -17,6 +17,7 @@ import {
 import { PrismaService, Settlement } from "@paadi/db";
 import { Queue } from "bullmq";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
+import { Scopes } from "../../common/decorators/scopes.decorator";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { ApiZodResponse } from "../../common/swagger/zod-api";
 import type { AccessClaims } from "../../infra/auth/token.service";
@@ -52,6 +53,7 @@ export class SettlementsController {
   ) {}
 
   @Post(":id/settle/retry")
+  @Scopes("pots:write")
   @ApiZodResponse(202, settlementViewSchema)
   async retry(
     @CurrentUser() claims: AccessClaims,
@@ -70,6 +72,7 @@ export class SettlementsController {
   }
 
   @Get(":id/settlement")
+  @Scopes("pots:read")
   @ApiZodResponse(200, settlementViewSchema)
   async getSettlement(
     @CurrentUser() claims: AccessClaims,

@@ -1,4 +1,5 @@
 import { Global, Module } from "@nestjs/common";
+import { ApiKeyRepository } from "./api-key.repository";
 import { AuthIdentityRepository } from "./auth-identity.repository";
 import { DeviceRepository } from "./device.repository";
 import { NotificationPreferenceRepository } from "./notification-preference.repository";
@@ -17,6 +18,7 @@ import { UserRepository } from "./user.repository";
     DeviceRepository,
     PayoutAccountRepository,
     NotificationPreferenceRepository,
+    ApiKeyRepository,
   ],
   exports: [
     UserRepository,
@@ -26,6 +28,7 @@ import { UserRepository } from "./user.repository";
     DeviceRepository,
     PayoutAccountRepository,
     NotificationPreferenceRepository,
+    ApiKeyRepository,
   ],
 })
 export class AuthPersistenceModule {}
