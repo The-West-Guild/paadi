@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAuthedClient } from "@/lib/api/client";
-import { Loader2, ShieldCheck, ShieldAlert, Clock } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
 
 export default function KycPendingPage() {
   const router = useRouter();

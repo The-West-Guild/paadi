@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
             router.push("/reset-password");
           }, 3000);
         },
-        onError: (err: any) => {
+        onError: (err: Error) => {
           toast.error(err.message ?? "Something went wrong. Please try again.");
         },
       }

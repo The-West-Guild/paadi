@@ -45,7 +45,7 @@ export default function WelcomePage() {
     setActiveIndex((i) => i + 1);
   }
 
-  function handleSkip() {
+  function _handleSkip() {
     router.push("/get-started");
   }
 

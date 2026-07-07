@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
             router.push("/login");
           }, 2500);
         },
-        onError: (err: any) => {
+        onError: (err: Error) => {
           toast.error(err.message ?? "Invalid reset parameters. Please check your code and try again.");
         },
       }

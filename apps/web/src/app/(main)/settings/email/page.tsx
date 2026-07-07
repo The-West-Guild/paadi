@@ -31,7 +31,7 @@ export default function EmailSettingsPage() {
         setStep("verify_code");
         toast.success("Verification code sent to your email.");
       },
-      onError: (err: any) => {
+      onError: (err: Error) => {
         toast.error(err.message ?? "Failed to initiate email verification.");
       },
     });
@@ -53,7 +53,7 @@ export default function EmailSettingsPage() {
           router.push("/settings/profile");
         }, 2000);
       },
-      onError: (err: any) => {
+      onError: (err: Error) => {
         toast.error(err.message ?? "Verification failed. Check the code and try again.");
       },
     });

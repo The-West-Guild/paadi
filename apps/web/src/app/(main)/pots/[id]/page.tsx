@@ -45,7 +45,7 @@ export default function PotDetailPage({ params }: { params: Promise<{ id: string
   function handleCancel() {
     if (!window.confirm("Are you sure you want to cancel this pot? This will stop collections.")) return;
     cancelPotMutation.mutate(undefined, {
-      onError: (err: any) => setErrorMsg(err.message ?? "Failed to cancel pot.")
+      onError: (err: Error) => setErrorMsg(err.message ?? "Failed to cancel pot.")
     });
   }
 
@@ -55,7 +55,7 @@ export default function PotDetailPage({ params }: { params: Promise<{ id: string
       onSuccess: () => {
         router.push("/pots");
       },
-      onError: (err: any) => setErrorMsg(err.message ?? "Failed to delete pot.")
+      onError: (err: Error) => setErrorMsg(err.message ?? "Failed to delete pot.")
     });
   }
 
@@ -158,19 +158,16 @@ export default function PotDetailPage({ params }: { params: Promise<{ id: string
           <div className="flex flex-col gap-2.5 text-xs text-indigo-950 font-bold">
             <p className="uppercase tracking-wide text-[10px] text-indigo-900/60">Status: <span className="font-black bg-white/80 border border-indigo-200/60 px-2 py-0.5 rounded-md ml-1 text-indigo-700 capitalize">{settlement.settlement.status}</span></p>
             
-            {settlement.settlement.vend && (
+            {settlement.settlement.vendToken && (
               <div className="mt-1 bg-white border border-[#111827]/5 rounded-xl p-3.5 shadow-sm flex flex-col gap-1">
                 <p className="text-[10px] font-black uppercase text-[#111827]/40 tracking-wide">Electricity Token</p>
                 <p className="font-mono font-black text-sm text-[#111827] select-all tracking-wider p-2.5 bg-slate-50 border border-dashed border-[#111827]/10 rounded-lg mt-1 text-center">
-                  {settlement.settlement.vend.token || "Generating..."}
+                  {settlement.settlement.vendToken || "Generating..."}
                 </p>
-                <p className="text-[10px] font-black uppercase tracking-wide text-[#111827]/40 mt-1">{settlement.settlement.vend.units || "0"} units vended</p>
+                <p className="text-[10px] font-black uppercase tracking-wide text-[#111827]/40 mt-1">{settlement.settlement.vendUnits || "0"} units vended</p>
               </div>
             )}
             
-            {settlement.settlement.destination && (
-              <p className="uppercase tracking-wide text-[10px] text-indigo-900/60">Destination: <span className="font-black text-indigo-950">{settlement.settlement.destination.bankName} (*{settlement.settlement.destination.accountNumberLast4})</span></p>
-            )}
           </div>
         </div>
       )}

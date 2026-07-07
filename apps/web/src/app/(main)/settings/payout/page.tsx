@@ -99,7 +99,7 @@ export default function PayoutAccountsPage() {
           setAccountNumber("");
           setPin([]);
         },
-        onError: (err: any) => {
+        onError: (err: Error & { statusCode?: number }) => {
           toast.error(
             err.statusCode === 401
               ? "Incorrect PIN. Please try again."
@@ -123,7 +123,7 @@ export default function PayoutAccountsPage() {
           setDeletingId(null);
           setDeletePin([]);
         },
-        onError: (err: any) => {
+        onError: (err: Error & { statusCode?: number }) => {
           toast.error(
             err.statusCode === 401
               ? "Incorrect PIN. Please try again."

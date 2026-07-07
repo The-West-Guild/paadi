@@ -71,7 +71,7 @@ export default function CreatePotPage() {
           onSuccess: (res) => {
             store.setField("billerCustomerName", res.customerName);
           },
-          onError: (err: any) => {
+          onError: (err: Error) => {
             toast.error(err.message ?? "Meter verification failed. Check the details.");
           }
         }
@@ -86,7 +86,7 @@ export default function CreatePotPage() {
           onSuccess: (res) => {
             store.setField("billerCustomerName", res.customerName);
           },
-          onError: (err: any) => {
+          onError: (err: Error) => {
             toast.error(err.message ?? "Smartcard verification failed. Check the details.");
           }
         }

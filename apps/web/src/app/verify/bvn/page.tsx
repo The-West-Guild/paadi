@@ -25,7 +25,7 @@ export default function KycBvnPage() {
       onSuccess: () => {
         router.push("/verify/selfie");
       },
-      onError: (err: any) => {
+      onError: (err: Error) => {
         toast.error(err.message ?? "BVN name check failed. Ensure your registered profile name matches the bank records.");
       },
     });

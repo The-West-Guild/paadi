@@ -30,7 +30,7 @@ export default function PinSetupPage() {
 
     signupPin.mutate(pin.join(""), {
       onSuccess: () => router.push("/biometric"),
-      onError: (err: any) => {
+      onError: (err: Error & { statusCode?: number }) => {
         toast.error(
           err.statusCode === 401
             ? "That doesn't look right. Try a different PIN."

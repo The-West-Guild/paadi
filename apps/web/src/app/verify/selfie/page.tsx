@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSubmitSelfie } from "@/features/kyc/hooks";
 import { toast } from "@/features/toast/store";
-import { Loader2, Camera, UserCheck } from "lucide-react";
+import { Loader2, Camera } from "lucide-react";
 
 export default function KycSelfiePage() {
   const router = useRouter();
@@ -54,7 +54,7 @@ export default function KycSelfiePage() {
       onSuccess: () => {
         router.push("/verify/pending");
       },
-      onError: (err: any) => {
+      onError: (err: Error) => {
         toast.error(err.message ?? "Liveness check failed. Ensure your face is clearly visible and matches the BVN record.");
       },
     });

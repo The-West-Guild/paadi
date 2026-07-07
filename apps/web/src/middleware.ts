@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   // Since session tokens are stored in localStorage, the server cannot
   // inspect them during SSR middleware execution.
   //

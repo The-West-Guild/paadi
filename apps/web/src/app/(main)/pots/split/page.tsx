@@ -41,7 +41,7 @@ export default function SplitPotPage() {
     setSplits(newSplits);
   }
 
-  function handleSplitChange(index: number, key: keyof SplitInput, val: any) {
+  function handleSplitChange(index: number, key: keyof SplitInput, val: string | number) {
     const newSplits = [...splits];
     newSplits[index] = { ...newSplits[index], [key]: val };
     setSplits(newSplits);

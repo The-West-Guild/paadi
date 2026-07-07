@@ -21,6 +21,7 @@ export default function ReviewPotPage() {
 
   function handleSubmit() {
     // Prepare CreatePotInput
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const input: any = {
       title: store.title,
       description: store.description || undefined,
@@ -29,6 +30,7 @@ export default function ReviewPotPage() {
       completionRule: completionRule,
       splitMode: store.splitMode,
       splits: store.splits.map((s) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const split: any = { label: s.label };
         if (store.splitMode === "weight") {
           split.weight = s.weight;
@@ -79,7 +81,7 @@ export default function ReviewPotPage() {
           // Navigate to detail screen
           router.push(`/pots/${potDetail.id}`);
         },
-        onError: (err: any) => {
+        onError: (err: Error) => {
           toast.error(err.message ?? "Failed to create pot. Check your details and try again.");
         },
       }

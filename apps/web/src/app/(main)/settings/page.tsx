@@ -15,7 +15,7 @@ export default function SettingsPage() {
       onSuccess: () => {
         router.push("/welcome");
       },
-      onError: (err: any) => {
+      onError: (err: Error) => {
         toast.error(err.message ?? "Failed to log out.");
         router.push("/welcome");
       }
