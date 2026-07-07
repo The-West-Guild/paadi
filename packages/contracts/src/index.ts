@@ -20,3 +20,4 @@ export * from "./dto/reconciliation.dto";
 export * from "./dto/statement.dto";
 export * from "./dto/wallet.dto";
 export * from "./dto/developer.dto";
+export * from "./dto/api-keys.dto";

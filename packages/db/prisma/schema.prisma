@@ -188,6 +188,7 @@ model User {
   walletCredits     WalletCredit[]
   withdrawals       Withdrawal[]
   webhookEndpoints  WebhookEndpoint[]
+  apiKeys           ApiKey[]
 
   @@index([email])
 }
@@ -609,6 +610,23 @@ model WebhookEndpoint {
 
   @@index([userId])
   @@index([status])
+}
+
+model ApiKey {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  prefix     String
+  keyHash    String    @unique
+  scopes     String[]
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([userId])
 }
 
 model WebhookDelivery {
