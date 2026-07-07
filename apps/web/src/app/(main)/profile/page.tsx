@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useMe } from "@/features/settings/profile-hooks";
-import { ChevronRight, Settings, ShieldCheck, ShieldAlert, Wallet, Lock, Bell, HelpCircle } from "lucide-react";
+import { toast } from "@/features/toast/store";
+import { ChevronRight, Settings, ShieldCheck, ShieldAlert, Mail, Share2 } from "lucide-react";
 import Link from "next/link";
 
 export default function ProfilePage() {
@@ -10,11 +11,17 @@ export default function ProfilePage() {
   const { data, isPending, error } = useMe();
 
   const links = [
-    { label: "Edit Profile", icon: Settings, href: "/settings/profile" },
-    { label: "Payout Accounts", icon: Wallet, href: "/settings/payout" },
-    { label: "Security & PIN", icon: Lock, href: "/settings/security" },
-    { label: "Notification Preferences", icon: Bell, href: "/settings/notifications" },
+    { label: "Edit Profile Information", icon: Settings, href: "/settings/profile" },
+    { label: "Email Status", icon: Mail, href: "/settings/email" },
   ];
+
+  function handleShareProfile() {
+    if (data?.profile?.username) {
+      const url = `${window.location.origin}/@${data.profile.username}`;
+      navigator.clipboard.writeText(url);
+      toast.success("Profile link copied to clipboard!");
+    }
+  }
 
   return (
     <div className="w-full flex flex-col">
@@ -107,6 +114,19 @@ export default function ProfilePage() {
             <ChevronRight className="h-4 w-4 text-ink/30 mr-1" />
           </Link>
         ))}
+        
+        {data?.profile?.username && (
+          <button
+            type="button"
+            onClick={handleShareProfile}
+            className="flex items-center gap-3.5 px-4 py-4 text-left active:bg-slate-50/60 transition-colors border-t border-slate-100"
+          >
+            <div className="p-1 text-ink/60">
+              <Share2 className="h-5 w-5 stroke-[2.25]" />
+            </div>
+            <span className="flex-1 font-bold text-sm text-ink/80">Share Public Profile</span>
+          </button>
+        )}
       </div>
 
       {/* SETTINGS QUICK SHORTCUT */}
