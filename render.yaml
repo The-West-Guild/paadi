@@ -1,0 +1,166 @@
+# Render Blueprint for Paadi backend.
+# Topology mirrors docker-compose.yml: managed Postgres + Redis, one Docker image
+# run as TWO services — the HTTP API (dist/main.js) and the BullMQ worker (dist/worker.js).
+#
+# Deploy: Render Dashboard -> New -> Blueprint -> pick this repo. Then fill every
+# `sync: false` secret in the dashboard (they are intentionally NOT stored in git).
+# After first deploy, register the API's public URL + "/webhooks/nomba" in the Nomba
+# dashboard, and set CORS_ORIGINS to the deployed frontend origin.
+
+databases:
+  - name: paadi-postgres
+    databaseName: paadi
+    user: paadi
+    plan: free            # 90-day free PG is fine for the hackathon; bump for prod
+
+services:
+  # ---- Redis / Key Value (BullMQ requires noeviction) ------------------------
+  - type: redis
+    name: paadi-redis
+    plan: free            # 25MB, no persistence — ok for demo; bump for prod
+    maxmemoryPolicy: noeviction   # REQUIRED by BullMQ or jobs get evicted
+    ipAllowList: []               # internal-only (reachable by our services)
+
+  # ---- HTTP API (dist/main.js) ----------------------------------------------
+  - type: web
+    name: paadi-api
+    runtime: docker
+    branch: main
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: .
+    dockerCommand: node apps/api/dist/main.js
+    healthCheckPath: /docs        # Swagger UI returns 200; swap for /health if added
+    plan: starter                 # free web idles after 15m (misses webhooks); starter stays warm
+    preDeployCommand: pnpm --filter @paadi/db db:push   # sync schema (repo uses db:push, not migrations)
+    envVars:
+      - fromGroup: paadi-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: paadi-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: paadi-redis
+          property: connectionString
+      - key: API_PORT           # app reads API_PORT; pin to Render's web port
+        value: "10000"
+      - key: PORT
+        value: "10000"
+
+  # ---- BullMQ worker (dist/worker.js) — no public port ----------------------
+  - type: worker
+    name: paadi-worker
+    runtime: docker
+    branch: main
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: .
+    dockerCommand: node apps/api/dist/worker.js
+    plan: starter
+    envVars:
+      - fromGroup: paadi-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: paadi-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: paadi-redis
+          property: connectionString
+
+# ---- Shared env (both API + worker) ------------------------------------------
+envVarGroups:
+  - name: paadi-shared
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # --- Nomba (start on mock so it boots; switch to real sandbox for the webhook demo) ---
+      - key: NOMBA_DRIVER
+        value: mock               # set to the real driver + creds below for live webhooks
+      - key: NOMBA_BASE_URL
+        sync: false               # e.g. the Nomba sandbox base URL
+      - key: NOMBA_CLIENT_ID
+        sync: false
+      - key: NOMBA_CLIENT_SECRET
+        sync: false
+      - key: NOMBA_ACCOUNT_ID
+        sync: false
+      - key: NOMBA_WEBHOOK_SIGNING_KEY
+        sync: false
+
+      # --- Auth secrets (Render auto-generates strong random values) ---
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: OTP_PEPPER
+        generateValue: true
+
+      # --- Encryption keys: set MANUALLY (need exact key material). Generate with:
+      #       openssl rand -hex 32
+      - key: PHONE_ENCRYPTION_KEY
+        sync: false
+      - key: PHONE_BLIND_INDEX_KEY
+        sync: false
+      - key: ACCOUNT_NUMBER_ENCRYPTION_KEY
+        sync: false
+
+      # --- OTP / SMS (console logs the code; wire a real driver for prod) ---
+      - key: SENDCHAMP_DRIVER
+        value: console
+      - key: SENDCHAMP_SENDER
+        value: Paadi
+      - key: SENDCHAMP_API_KEY
+        sync: false
+
+      # --- KYC (mock until real Dojah creds) ---
+      - key: DOJAH_DRIVER
+        value: mock
+      - key: DOJAH_BASE_URL
+        sync: false
+      - key: DOJAH_APP_ID
+        sync: false
+      - key: DOJAH_API_KEY
+        sync: false
+      - key: DOJAH_WEBHOOK_SECRET
+        sync: false
+
+      # --- Google identity (mock until real client IDs) ---
+      - key: GOOGLE_DRIVER
+        value: mock
+      - key: GOOGLE_CLIENT_IDS
+        sync: false
+
+      # --- Push (Expo) ---
+      - key: EXPO_ACCESS_TOKEN
+        sync: false
+
+      # --- Nudge timings ---
+      - key: NUDGE_CREATED_DELAY_MS
+        value: "86400000"         # 24h
+      - key: NUDGE_DEADLINE_WINDOW_MS
+        value: "43200000"         # 12h
+
+      # --- Developer API keys ---
+      - key: API_KEY_CACHE_TTL_SECONDS
+        value: "60"
+      - key: API_KEYS_MAX_PER_USER
+        value: "5"
+
+      # --- Rate limiting ---
+      - key: RATE_LIMIT_ENABLED
+        value: "true"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
+      - key: RATE_LIMIT_AUTHENTICATED_LIMIT
+        value: "120"
+      - key: RATE_LIMIT_API_KEY_LIMIT
+        value: "600"
+      - key: RATE_LIMIT_PUBLIC_LIMIT
+        value: "30"
+
+      # --- CORS: set to the deployed frontend origin (comma-separated for many) ---
+      - key: CORS_ORIGINS
+        sync: false
