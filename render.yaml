@@ -73,8 +73,12 @@ services:
 envVarGroups:
   - name: paadi-shared
     envVars:
+      # 'staging' (not 'production') so the app boots with mock/console integration
+      # drivers. The integration modules HARD-REQUIRE real drivers when NODE_ENV=production
+      # (nomba/dojah/google/sendchamp throw "…is required in production"). staging still lets
+      # us flip individual drivers to real (e.g. NOMBA_DRIVER=nomba) for the live webhook demo.
       - key: NODE_ENV
-        value: production
+        value: staging
 
       # --- Nomba (start on mock so it boots; switch to real sandbox for the webhook demo) ---
       - key: NOMBA_DRIVER
