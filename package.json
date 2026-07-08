@@ -24,7 +24,9 @@
   },
   "pnpm": {
     "overrides": {
-      "@modelcontextprotocol/sdk>zod-to-json-schema": "3.24.6"
+      "@modelcontextprotocol/sdk>zod-to-json-schema": "3.24.6",
+      "react": "19.0.0",
+      "react-dom": "19.0.0"
     }
   }
 }
